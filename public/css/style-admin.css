@@ -1,0 +1,428 @@
+/* ============================================================
+   Admin 后台样式（Task 6）
+   追加到 style.css 末尾，独立命名空间 admin-*
+   ============================================================ */
+
+.admin-hidden { display: none !important; }
+
+/* ============ 无权限占位 ============ */
+.admin-denied {
+  max-width: 480px;
+  margin: 80px auto;
+  text-align: center;
+}
+
+/* ============ 管理后台外壳 ============ */
+.admin-shell {
+  padding-bottom: 32px;
+}
+
+/* ============ Tab 切换 ============ */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  padding: 6px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 16px;
+}
+
+.admin-tab {
+  flex: 1;
+  padding: 12px 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-serif);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-tab.active {
+  background: var(--color-cta);
+  color: var(--color-text-inverse);
+  box-shadow: var(--shadow-cta);
+}
+
+.admin-pane { display: none; }
+.admin-pane.active { display: block; animation: fadeIn 0.2s ease-out; }
+
+/* ============ 寄养人审核 ============ */
+.admin-filter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-filter-chip {
+  padding: 8px 14px;
+  background: var(--color-card);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.admin-filter-chip.active {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  border-color: var(--color-primary);
+}
+
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 寄养人卡片 */
+.admin-host-card {
+  padding: 16px;
+}
+
+.admin-host-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.admin-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--color-bg-cream);
+  border: 2px solid var(--color-border);
+}
+
+.admin-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.admin-host-name-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-host-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  font-family: var(--font-serif);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-host-phone {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+  font-family: var(--font-mono);
+}
+
+.admin-status {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.admin-status-pending { background: #FFF4E0; color: #B88020; }
+.admin-status-active  { background: #E8F0E1; color: var(--color-trust-dark); }
+.admin-status-rejected { background: #FBE8E8; color: var(--color-error); }
+.admin-status-suspended { background: #E5EEF5; color: var(--color-info); }
+
+.admin-host-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.admin-host-badges .chip {
+  padding: 3px 10px;
+  font-size: 12px;
+  background: var(--color-bg-cream);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.admin-host-realname {
+  font-size: 12px;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.admin-host-meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+}
+
+.admin-host-exp {
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.5;
+  padding: 8px 10px;
+  background: var(--color-bg-cream);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.admin-host-applied {
+  display: block;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-bottom: 10px;
+}
+
+.admin-host-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-host-actions .btn {
+  padding: 10px 16px;
+  font-size: 13px;
+  min-height: 40px;
+}
+
+/* ============ 用户管理 ============ */
+.admin-search-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.admin-search-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  background: var(--color-card);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  min-height: 44px;
+}
+
+.admin-search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.12);
+}
+
+.admin-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.admin-pager .btn {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.admin-pager-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+}
+
+.admin-table-wrap {
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-table thead th {
+  background: var(--color-bg-cream);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-family: var(--font-serif);
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.admin-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child td { border-bottom: none; }
+
+.admin-table tbody tr:hover {
+  background: rgba(245, 230, 211, 0.3);
+}
+
+.admin-cell-muted {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.admin-cell-actions .btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  min-height: 32px;
+}
+
+.admin-role-admin {
+  background: var(--color-cta) !important;
+  color: var(--color-text-inverse) !important;
+  border-color: var(--color-cta) !important;
+}
+
+.admin-role-user {
+  background: var(--color-bg-cream);
+  color: var(--color-text-secondary);
+}
+
+.admin-chip-banned {
+  background: var(--color-error);
+  color: var(--color-text-inverse);
+  border-color: var(--color-error);
+}
+
+/* ============ 邀请码 ============ */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.admin-stat-card {
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+}
+
+.admin-stat-num {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-cta);
+  font-family: var(--font-serif);
+  line-height: 1.1;
+}
+
+.admin-stat-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+.admin-code-generate {
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.admin-code-generate .form-row {
+  align-items: center;
+}
+
+.admin-code-generate input[type="number"] {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  font-size: 14px;
+  min-height: 44px;
+  font-family: var(--font-mono);
+}
+
+.admin-generated {
+  margin-top: 10px;
+  padding: 10px;
+  background: #E8F0E1;
+  color: var(--color-trust-dark);
+  border-radius: 8px;
+  font-size: 12px;
+  word-break: break-all;
+  font-family: var(--font-mono);
+  min-height: 10px;
+}
+
+.admin-section-title {
+  font-size: 15px;
+  font-family: var(--font-serif);
+  color: var(--color-text);
+  margin-bottom: 12px;
+}
+
+.admin-code-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.admin-code-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--color-bg-cream);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+.admin-code-item code {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.admin-code-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+/* ============ 移动端适配 ============ */
+@media (max-width: 480px) {
+  .admin-host-actions .btn {
+    flex: 1;
+    padding: 10px 8px;
+  }
+  .admin-stat-num { font-size: 24px; }
+  .admin-code-generate .form-row {
+    flex-direction: column;
+  }
+  .admin-code-generate .btn {
+    width: 100%;
+  }
+}

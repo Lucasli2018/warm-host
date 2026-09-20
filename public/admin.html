@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 - warm-host</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style-admin.css">
+  <link href="https://cdn.jsdelivr.net/npm/cn-fontsource-noto-serif-sc-regular@1.0.0/index.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/cn-fontsource-noto-sans-sc-regular@1.0.0/index.css" rel="stylesheet">
+</head>
+<body>
+  <div class="header">
+    <a href="/" class="header-back" title="返回首页">‹</a>
+    <span class="header-title">管理后台</span>
+    <button class="header-back" id="btn-logout" title="退出登录">退出</button>
+  </div>
+
+  <!-- 无权限占位 -->
+  <div id="admin-denied" class="admin-denied admin-hidden">
+    <div class="empty-state">
+      <span class="emoji">🔒</span>
+      <h3>无权限访问</h3>
+      <p>此页面仅管理员可访问</p>
+      <button class="btn btn-primary" onclick="location.href='/my.html'">返回我的</button>
+    </div>
+  </div>
+
+  <div id="admin-shell" class="container admin-shell admin-hidden">
+
+    <!-- Tab 切换 -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="hosts">寄养人审核</button>
+      <button class="admin-tab" data-tab="users">用户管理</button>
+      <button class="admin-tab" data-tab="codes">邀请码</button>
+    </div>
+
+    <!-- ============ 寄养人审核 Tab ============ -->
+    <div id="admin-tab-hosts" class="admin-pane active">
+      <div class="admin-filter">
+        <button class="chip chip-primary admin-filter-chip active" data-status="pending">待审核</button>
+        <button class="chip admin-filter-chip" data-status="active">已通过</button>
+        <button class="chip admin-filter-chip" data-status="rejected">已拒绝</button>
+        <button class="chip admin-filter-chip" data-status="suspended">已暂停</button>
+      </div>
+      <div id="hosts-list" class="admin-list">
+        <div class="empty-state"><span class="emoji">⏳</span><h3>加载中…</h3></div>
+      </div>
+    </div>
+
+    <!-- ============ 用户管理 Tab ============ -->
+    <div id="admin-tab-users" class="admin-pane">
+      <div class="admin-search-row">
+        <input type="search" id="user-search" class="admin-search-input" placeholder="按手机号 / 昵称搜索" maxlength="50">
+        <button class="btn btn-primary" id="btn-user-search">搜索</button>
+      </div>
+      <div class="admin-pager" id="users-pager">
+        <button class="btn btn-ghost" id="btn-users-prev">上一页</button>
+        <span class="admin-pager-label" id="users-pager-label">- / -</span>
+        <button class="btn btn-ghost" id="btn-users-next">下一页</button>
+      </div>
+      <div id="users-list" class="admin-table-wrap">
+        <div class="empty-state"><span class="emoji">👥</span><h3>加载中…</h3></div>
+      </div>
+    </div>
+
+    <!-- ============ 邀请码 Tab ============ -->
+    <div id="admin-tab-codes" class="admin-pane">
+      <div class="admin-stats" id="codes-stats">
+        <div class="admin-stat-card">
+          <div class="admin-stat-num" id="codes-total">-</div>
+          <div class="admin-stat-label">总邀请码</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-num" id="codes-available">-</div>
+          <div class="admin-stat-label">可用</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-num" id="codes-used">-</div>
+          <div class="admin-stat-label">已使用</div>
+        </div>
+      </div>
+
+      <div class="card admin-code-generate">
+        <div class="form-group">
+          <label>生成数量（1-100）</label>
+          <div class="form-row">
+            <input type="number" id="codes-count" min="1" max="100" step="1" value="10">
+            <button class="btn btn-primary" id="btn-generate-codes">生成</button>
+          </div>
+        </div>
+        <div class="admin-generated" id="codes-generated"></div>
+      </div>
+
+      <div class="card">
+        <h3 class="admin-section-title">可用邀请码（最近 50 个）</h3>
+        <div class="admin-code-grid" id="codes-list"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/pages/admin.js"></script>
+</body>
+</html>
