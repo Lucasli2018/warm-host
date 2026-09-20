@@ -506,3 +506,288 @@ textarea {
   font-size: 12px;
   color: var(--color-text-muted);
 }
+
+/* ============================================================
+   My 页面 · 4 Tab + 宠物档案
+   ============================================================ */
+
+.my-tabs {
+  display: flex;
+  background: var(--color-bg-cream);
+  border-radius: var(--radius-button);
+  padding: 4px;
+  margin-bottom: var(--space-4);
+  gap: 4px;
+}
+
+.my-tab {
+  flex: 1;
+  min-height: 40px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+}
+
+.my-tab.active {
+  background: var(--color-card);
+  color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(139, 94, 60, 0.1);
+}
+
+.my-content { display: none; }
+.my-content.active { display: block; animation: fadeIn 0.2s ease-out; }
+
+/* 宠物卡片 */
+.pet-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.pet-cover {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--color-bg-cream);
+}
+
+.pet-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: var(--color-text-muted);
+}
+
+.pet-info { flex: 1; min-width: 0; }
+
+.pet-name {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 2px;
+}
+
+.pet-species { font-size: 16px; margin-left: 4px; }
+
+.pet-breed {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.pet-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+.pet-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.pet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pet-actions .btn {
+  padding: 4px 10px;
+  min-height: 32px;
+  font-size: 13px;
+}
+
+.pet-delete { color: var(--color-error); }
+
+/* 表单行 */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* 性格 chips */
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip-cursor {
+  cursor: pointer;
+  user-select: none;
+  padding: 6px 14px;
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.chip-cursor.chip-primary {
+  background: rgba(139, 94, 60, 0.14);
+  color: var(--color-primary);
+  border-color: rgba(139, 94, 60, 0.36);
+}
+
+/* 照片选择器 */
+.photo-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.photo-item {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--color-bg-cream);
+  border: 1px solid var(--color-border);
+}
+
+.photo-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-add {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  border: 2px dashed var(--color-border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  background: var(--color-bg-cream);
+  transition: all 0.15s ease;
+}
+
+.photo-add:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.photo-cover-btn,
+.photo-del-btn {
+  position: absolute;
+  top: 2px;
+  min-height: 22px;
+  border-radius: 4px;
+  font-size: 11px;
+  padding: 2px 6px;
+  cursor: pointer;
+  color: var(--color-text-inverse);
+}
+
+.photo-cover-btn {
+  left: 2px;
+  background: rgba(61, 40, 23, 0.75);
+}
+
+.photo-del-btn {
+  right: 2px;
+  background: rgba(201, 76, 76, 0.9);
+  font-weight: 700;
+}
+
+.photo-badge {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  background: var(--color-cta);
+  color: var(--color-text-inverse);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: none;
+}
+
+.modal.show { display: block; }
+
+.modal-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(61, 40, 23, 0.5);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  position: relative;
+  max-width: 640px;
+  margin: 40px auto;
+  max-height: calc(100vh - 80px);
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.24);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: fadeInUp 0.25s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-page-top);
+}
+
+.modal-header h3 {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  color: var(--color-primary);
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.modal-close:hover { background: rgba(139, 94, 60, 0.08); }
+
+.modal-body {
+  padding: 16px 20px 24px;
+  overflow-y: auto;
+}
+
+/* 空状态 · 简化 */
+.empty-state p {
+  font-size: 13px;
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+}
+

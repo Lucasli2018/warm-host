@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>我的 - warm-host</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/cn-fontsource-noto-serif-sc-regular@1.0.0/index.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/cn-fontsource-noto-sans-sc-regular@1.0.0/index.css" rel="stylesheet">
+</head>
+<body>
+  <div class="header">
+    <span class="header-title">我的</span>
+    <button class="header-back" id="btn-logout" title="退出登录">退出</button>
+  </div>
+
+  <div class="container page-with-tabbar">
+
+    <!-- 顶部 4 Tab -->
+    <div class="my-tabs">
+      <button class="my-tab active" data-tab="pets">宠物</button>
+      <button class="my-tab" data-tab="needs">需求</button>
+      <button class="my-tab" data-tab="orders">订单</button>
+      <button class="my-tab" data-tab="host">寄养</button>
+    </div>
+
+    <!-- 宠物 Tab -->
+    <div class="my-content active" id="tab-pets">
+      <button class="btn btn-primary btn-block" id="btn-add-pet">+ 添加宠物</button>
+      <div id="pet-list"></div>
+    </div>
+
+    <!-- 需求 Tab 占位 -->
+    <div class="my-content" id="tab-needs">
+      <div class="empty-state">
+        <span class="emoji">📝</span>
+        <h3>寄养需求</h3>
+        <p>Task 9 完善</p>
+      </div>
+    </div>
+
+    <!-- 订单 Tab 占位 -->
+    <div class="my-content" id="tab-orders">
+      <div class="empty-state">
+        <span class="emoji">📋</span>
+        <h3>订单管理</h3>
+        <p>Task 10 完善</p>
+      </div>
+    </div>
+
+    <!-- 寄养 Tab 占位 -->
+    <div class="my-content" id="tab-host">
+      <div class="empty-state">
+        <span class="emoji">🏠</span>
+        <h3>寄养人档案</h3>
+        <p>Task 5 完善</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 宠物表单 Modal -->
+  <div id="pet-modal" class="modal">
+    <div class="modal-mask"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="pet-modal-title">添加宠物</h3>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body">
+        <form id="pet-form">
+          <input type="hidden" name="petId">
+          <div class="form-group">
+            <label>名字 <span class="required">*</span></label>
+            <input type="text" name="name" required maxlength="30" placeholder="如：豆豆">
+          </div>
+          <div class="form-group">
+            <label>种类 <span class="required">*</span></label>
+            <select name="species" required>
+              <option value="">请选择</option>
+              <option value="猫">🐱 猫</option>
+              <option value="狗">🐶 狗</option>
+              <option value="兔">🐰 兔</option>
+              <option value="其他">🐾 其他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>品种</label>
+            <input type="text" name="breed" maxlength="40" placeholder="如：柯基、英短">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>性别</label>
+              <select name="gender">
+                <option value="">未知</option>
+                <option value="公">公</option>
+                <option value="母">母</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>年龄</label>
+              <input type="text" name="age" maxlength="20" placeholder="如：2岁">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>体重</label>
+            <input type="text" name="weight" maxlength="20" placeholder="如：12kg">
+          </div>
+          <div class="form-group">
+            <label>性格</label>
+            <div class="chip-group" id="personality-chips"></div>
+          </div>
+          <div class="form-group">
+            <label>健康说明</label>
+            <textarea name="health_notes" maxlength="500" placeholder="疫苗、绝育、过敏源等"></textarea>
+          </div>
+          <div class="form-group">
+            <label>每日习惯</label>
+            <textarea name="daily_habits" maxlength="500" placeholder="作息、遛弯次数、饮食偏好"></textarea>
+          </div>
+          <div class="form-group">
+            <label>特殊需求</label>
+            <textarea name="special_needs" maxlength="500" placeholder="如：不能接触猫、需安静环境"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>照片 <span class="hint">(jpg/png/webp，≤5MB/张，最多 9 张)</span></label>
+            <div class="photo-picker" id="photo-picker"></div>
+            <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" multiple style="display:none">
+            <button type="button" class="btn btn-secondary btn-block" id="btn-pick-photo">选择照片</button>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" id="pet-submit">保存</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/pages/my.js"></script>
+</body>
+</html>
