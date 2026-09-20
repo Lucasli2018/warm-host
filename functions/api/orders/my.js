@@ -55,12 +55,14 @@ export async function onRequestGet({ request, env }) {
             uh.id AS peer_host_id, uh.nickname AS host_nickname, uh.avatar_key AS host_avatar_key,
             uo.id AS peer_owner_id, uo.nickname AS owner_nickname, uo.avatar_key AS owner_avatar_key,
             h.district AS host_district, h.address_fuzzy AS host_address_fuzzy,
-            h.daily_rate_cents AS host_daily_rate_cents
+            h.daily_rate_cents AS host_daily_rate_cents,
+            r.id AS review_id
      FROM orders o
      LEFT JOIN pets p ON o.pet_id = p.id
      LEFT JOIN users uh ON o.host_id = uh.id
      LEFT JOIN users uo ON o.owner_id = uo.id
      LEFT JOIN host_profiles h ON h.user_id = o.host_id
+     LEFT JOIN reviews r ON r.order_id = o.id
      WHERE ${whoCol} = ?
      ORDER BY o.created_at DESC
      LIMIT ? OFFSET ?`
@@ -97,6 +99,7 @@ export async function onRequestGet({ request, env }) {
       avatarKey: o.owner_avatar_key || null,
     },
     isOwnerView: role === "owner",
+    reviewed: !!o.review_id,
   }));
 
   return json({ orders, total: Number(totalRow.c) || 0, page, pageSize, role });

@@ -1322,8 +1322,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } else if (o.status === 'completed') {
       actionsHtml = `
-        <div class="order-hint">🎉 本次寄养已完成</div>
-        <a class="btn btn-primary btn-flex" href="/my.html?tab=orders&order=${o.id}" data-review-link="${o.id}">去评价</a>`;
+        <div class="order-hint">🎉 本次寄养已完成</div>` +
+        (o.reviewed
+          ? `<span class="review-done-badge">已评价</span>`
+          : `<button class="btn btn-primary btn-flex" data-review-link="${o.id}" data-peer-id="${o.isOwnerView ? (o.host && o.host.id) : (o.owner && o.owner.id)}" data-peer-name="${escapeHtml(o.isOwnerView ? (o.host && o.host.nickname) : (o.owner && o.owner.nickname))}">去评价</button>`);
     } else if (o.status === 'cancelled') {
       actionsHtml = `<div class="order-hint">🚫 订单已取消</div>`;
     } else if (o.status === 'disputed') {
@@ -1425,11 +1427,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           confirmOrderAction(btn, btn.dataset.orderId, btn.dataset.action);
         });
       });
-      // 评价链接（占位提示）
+      // 评价链接 → 打开评价弹窗
       ordersListEl.querySelectorAll('[data-review-link]').forEach(a => {
         a.addEventListener('click', (e) => {
           e.preventDefault();
-          showToast('评价功能即将开放', 'info');
+          e.stopPropagation();
+          openReviewModal(a.dataset.reviewLink, a.dataset.peerId, a.dataset.peerName);
         });
       });
       // 卡片点击 → 展开详情
@@ -1526,6 +1529,260 @@ document.addEventListener('DOMContentLoaded', async () => {
       confirmState = null;
     }
   }
+
+  // ============ 评价弹窗 ============
+  const REVIEW_TAGS = ['照顾周到', '沟通顺畅', '环境整洁', '按时接送', '有爱心', '经验丰富', '会拍照', '有急救知识'];
+  const MAX_REVIEW_TAGS = 6;
+  const MAX_REVIEW_PHOTOS = 6;
+  const MAX_REVIEW_CONTENT = 500;
+  const MAX_REVIEW_PHOTO_SIZE = 5 * 1024 * 1024;
+  const ALLOWED_REVIEW_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+  const reviewModal = document.getElementById('review-modal');
+  const reviewStarsEl = document.getElementById('review-stars');
+  const reviewTagsEl = document.getElementById('review-tags');
+  const reviewTextarea = document.getElementById('review-textarea');
+  const reviewCharNow = document.getElementById('review-char-now');
+  const reviewFileInput = document.getElementById('review-file-input');
+  const reviewPreviewEl = document.getElementById('review-preview');
+  const reviewSubmitBtn = document.getElementById('review-submit');
+  const reviewPeerLabel = document.getElementById('review-peer-label');
+
+  const reviewState = {
+    orderId: null,
+    peerId: null,
+    peerName: '',
+    rating: 0,
+    tags: new Set(),
+    // 每项: { file: File, key: string|null } — key=null 表示尚未上传
+    items: [],
+  };
+
+  function renderReviewTags() {
+    reviewTagsEl.innerHTML = REVIEW_TAGS.map(t =>
+      `<span class="tag-chip" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</span>`
+    ).join('');
+    reviewTagsEl.querySelectorAll('.tag-chip').forEach(c => {
+      c.addEventListener('click', () => {
+        const v = c.dataset.tag;
+        if (reviewState.tags.has(v)) {
+          reviewState.tags.delete(v);
+          c.classList.remove('active');
+        } else {
+          if (reviewState.tags.size >= MAX_REVIEW_TAGS) {
+            showToast(`最多选择 ${MAX_REVIEW_TAGS} 个标签`, 'warning');
+            return;
+          }
+          reviewState.tags.add(v);
+          c.classList.add('active');
+        }
+      });
+    });
+  }
+
+  function renderReviewStars() {
+    const stars = reviewStarsEl.querySelectorAll('.star');
+    stars.forEach(s => {
+      const v = parseInt(s.dataset.v, 10);
+      if (v <= reviewState.rating) {
+        s.classList.add('active');
+        s.textContent = '★';
+      } else {
+        s.classList.remove('active');
+        s.textContent = '☆';
+      }
+    });
+  }
+
+  reviewStarsEl.querySelectorAll('.star').forEach(s => {
+    s.addEventListener('click', () => {
+      reviewState.rating = parseInt(s.dataset.v, 10);
+      renderReviewStars();
+    });
+  });
+
+  function renderReviewPreview() {
+    let html = '';
+    reviewState.items.forEach((item, i) => {
+      const isUploading = item.uploading === true;
+      html += `<div class="review-thumb">
+        <img src="${URL.createObjectURL(item.file)}" alt="preview" data-idx="${i}">
+        <button type="button" class="review-thumb-del" data-idx="${i}" ${isUploading ? 'disabled' : ''}>×</button>
+      </div>`;
+    });
+    if (reviewState.items.length < MAX_REVIEW_PHOTOS) {
+      html += '<div class="review-thumb review-thumb-add" id="review-add-photo">+</div>';
+    }
+    reviewPreviewEl.innerHTML = html;
+
+    reviewPreviewEl.querySelectorAll('.review-thumb-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = parseInt(btn.dataset.idx, 10);
+        if (reviewState.items[i] && reviewState.items[i].uploading) return;
+        reviewState.items.splice(i, 1);
+        renderReviewPreview();
+      });
+    });
+    const addBtn = document.getElementById('review-add-photo');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => reviewFileInput.click());
+    }
+  }
+
+  reviewFileInput.addEventListener('change', () => {
+    const files = Array.from(reviewFileInput.files || []);
+    if (files.length === 0) return;
+    const remaining = MAX_REVIEW_PHOTOS - reviewState.items.length;
+    if (remaining <= 0) {
+      showToast(`最多 ${MAX_REVIEW_PHOTOS} 张`, 'warning');
+      reviewFileInput.value = '';
+      return;
+    }
+    let added = 0;
+    for (const f of files) {
+      if (added >= remaining) {
+        showToast(`最多 ${MAX_REVIEW_PHOTOS} 张，已忽略多余`, 'warning');
+        break;
+      }
+      if (!ALLOWED_REVIEW_TYPES.includes(f.type)) {
+        showToast(`不支持的格式：${f.name}`, 'warning');
+        continue;
+      }
+      if (f.size > MAX_REVIEW_PHOTO_SIZE) {
+        showToast(`图片过大：${f.name}`, 'warning');
+        continue;
+      }
+      reviewState.items.push({ file: f, key: null });
+      added++;
+    }
+    reviewFileInput.value = '';
+    renderReviewPreview();
+  });
+
+  function resetReviewState() {
+    reviewState.orderId = null;
+    reviewState.peerId = null;
+    reviewState.peerName = '';
+    reviewState.rating = 0;
+    reviewState.tags.clear();
+    reviewState.items = [];
+    reviewTextarea.value = '';
+    reviewCharNow.textContent = '0';
+    reviewPeerLabel.textContent = '评价对象';
+    renderReviewTags();
+    renderReviewStars();
+    renderReviewPreview();
+    reviewSubmitBtn.disabled = false;
+    reviewSubmitBtn.querySelector('.btn-text').style.display = '';
+    reviewSubmitBtn.querySelector('.btn-loading').style.display = 'none';
+    reviewSubmitBtn.querySelector('.btn-loading').textContent = '提交中…';
+  }
+
+  function openReviewModal(orderId, peerId, peerName) {
+    resetReviewState();
+    reviewState.orderId = orderId;
+    reviewState.peerId = peerId;
+    reviewState.peerName = peerName || '对方';
+    reviewPeerLabel.textContent = `评价：${reviewState.peerName}`;
+    reviewModal.classList.add('show');
+  }
+
+  function closeReviewModal() {
+    reviewModal.classList.remove('show');
+    resetReviewState();
+  }
+
+  reviewModal.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', closeReviewModal));
+  reviewModal.querySelector('.modal-mask').addEventListener('click', closeReviewModal);
+
+  // 字符计数
+  reviewTextarea.addEventListener('input', () => {
+    reviewCharNow.textContent = String(reviewTextarea.value.length);
+  });
+
+  // 上传单张
+  async function uploadReviewPhoto(file) {
+    const token = ApiClient.getToken();
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch(`/api/reviews/upload?orderId=${encodeURIComponent(reviewState.orderId)}`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: fd,
+    });
+    let data = {};
+    try { data = await res.json(); } catch { /* ignore */ }
+    if (!res.ok) {
+      throw new Error(data.error || `上传失败 (${res.status})`);
+    }
+    return data.key;
+  }
+
+  reviewSubmitBtn.addEventListener('click', async () => {
+    if (!reviewState.orderId) return;
+    if (reviewState.rating < 1 || reviewState.rating > 5) {
+      showToast('请选择星级', 'warning');
+      return;
+    }
+    const content = reviewTextarea.value.trim();
+    if (content.length > MAX_REVIEW_CONTENT) {
+      showToast(`评价内容最多 ${MAX_REVIEW_CONTENT} 字`, 'error');
+      return;
+    }
+
+    // 先上传未上传的图片
+    const toUpload = reviewState.items.filter(it => !it.key);
+    if (toUpload.length > 0) {
+      reviewSubmitBtn.disabled = true;
+      reviewSubmitBtn.querySelector('.btn-text').style.display = 'none';
+      reviewSubmitBtn.querySelector('.btn-loading').style.display = '';
+      reviewSubmitBtn.querySelector('.btn-loading').textContent = `上传中 0/${toUpload.length}…`;
+      try {
+        for (let i = 0; i < toUpload.length; i++) {
+          const item = toUpload[i];
+          item.uploading = true;
+          renderReviewPreview();
+          const key = await uploadReviewPhoto(item.file);
+          item.key = key;
+          item.uploading = false;
+          reviewSubmitBtn.querySelector('.btn-loading').textContent = `上传中 ${i + 1}/${toUpload.length}…`;
+        }
+      } catch (err) {
+        showToast('图片上传失败：' + err.message + '（已上传的已保留，可重试）', 'error');
+        toUpload.forEach(it => { it.uploading = false; });
+        reviewSubmitBtn.disabled = false;
+        reviewSubmitBtn.querySelector('.btn-text').style.display = '';
+        reviewSubmitBtn.querySelector('.btn-loading').style.display = 'none';
+        reviewSubmitBtn.querySelector('.btn-loading').textContent = '提交中…';
+        renderReviewPreview();
+        return;
+      }
+    }
+
+    // 提交评价
+    reviewSubmitBtn.disabled = true;
+    reviewSubmitBtn.querySelector('.btn-text').style.display = 'none';
+    reviewSubmitBtn.querySelector('.btn-loading').style.display = '';
+    reviewSubmitBtn.querySelector('.btn-loading').textContent = '提交中…';
+
+    try {
+      await ApiClient.post(`/orders/${reviewState.orderId}/review`, {
+        rating: reviewState.rating,
+        content: content,
+        tags: Array.from(reviewState.tags),
+        photos: reviewState.items.filter(it => it.key).map(it => it.key),
+      });
+      showToast('感谢您的评价！', 'success');
+      closeReviewModal();
+      await loadOrders();
+    } catch (err) {
+      showToast(err.message || '提交失败', 'error');
+      reviewSubmitBtn.disabled = false;
+      reviewSubmitBtn.querySelector('.btn-text').style.display = '';
+      reviewSubmitBtn.querySelector('.btn-loading').style.display = 'none';
+      reviewSubmitBtn.querySelector('.btn-loading').textContent = '提交中…';
+    }
+  });
 
   // 初始加载（宠物 + 寄养 + 需求 并行；宠物缓存后再拉需求）
   await Promise.all([loadPets(), loadHost()]);

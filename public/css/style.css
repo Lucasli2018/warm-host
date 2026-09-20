@@ -2158,3 +2158,159 @@ textarea {
   border-radius: var(--radius-card);
   border: 1px solid var(--color-border);
 }
+/* ============================================================
+   Task 11 · 评价弹窗样式
+   ============================================================ */
+
+.review-modal-head {
+  padding: 12px 14px;
+  background: var(--color-bg, #fafafa);
+  border-radius: var(--radius-card, 12px);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.review-modal-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text, #333);
+}
+
+.review-stars {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.star {
+  font-size: 30px;
+  line-height: 1;
+  color: #d0d0d0;
+  cursor: pointer;
+  user-select: none;
+  transition: color .12s ease, transform .12s ease;
+}
+.star:hover { transform: scale(1.12); }
+.star.active {
+  color: #ff7a45;
+}
+
+.review-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tag-chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--color-bg, #fafafa);
+  border: 1px solid var(--color-border, #e5e5e5);
+  font-size: 13px;
+  color: var(--color-text, #333);
+  cursor: pointer;
+  user-select: none;
+  transition: all .12s ease;
+}
+.tag-chip:hover {
+  border-color: var(--color-cta, #ff7a45);
+}
+.tag-chip.active {
+  background: var(--color-cta, #ff7a45);
+  color: #fff;
+  border-color: var(--color-cta, #ff7a45);
+}
+
+.review-textarea {
+  width: 100%;
+  min-height: 88px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border, #e5e5e5);
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  font-family: inherit;
+  background: #fff;
+  color: var(--color-text, #333);
+}
+.review-textarea:focus {
+  outline: none;
+  border-color: var(--color-cta, #ff7a45);
+}
+.char-count {
+  text-align: right;
+  font-size: 12px;
+  color: var(--color-text-muted, #999);
+  margin-top: 4px;
+}
+
+.review-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.review-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.review-thumb {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-border, #e5e5e5);
+  background: var(--color-bg, #fafafa);
+}
+.review-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.review-thumb-del {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,.55);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.review-thumb-del:hover { background: rgba(255,70,70,.9); }
+.review-thumb-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--color-text-muted, #999);
+  cursor: pointer;
+  border-style: dashed;
+}
+.review-thumb-add:hover {
+  border-color: var(--color-cta, #ff7a45);
+  color: var(--color-cta, #ff7a45);
+}
+
+/* 已评价标签 */
+.review-done-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: var(--color-bg, #f0f0f0);
+  color: var(--color-text-muted, #999);
+  font-size: 13px;
+  font-weight: 500;
+}

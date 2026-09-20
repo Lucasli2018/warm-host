@@ -281,6 +281,58 @@
     </div>
   </div>
 
+  <!-- 评价弹窗 -->
+  <div id="review-modal" class="modal">
+    <div class="modal-mask"></div>
+    <div class="modal-content" style="max-width:520px">
+      <div class="modal-header">
+        <h3 id="review-modal-title">评价本次寄养</h3>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="review-modal-head">
+          <span class="review-modal-title" id="review-peer-label">评价对象</span>
+        </div>
+
+        <div class="form-group">
+          <label>打分 <span class="required">*</span></label>
+          <div class="review-stars" id="review-stars">
+            <span class="star" data-v="1">☆</span>
+            <span class="star" data-v="2">☆</span>
+            <span class="star" data-v="3">☆</span>
+            <span class="star" data-v="4">☆</span>
+            <span class="star" data-v="5">☆</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>标签（可选，最多 6 个）</label>
+          <div class="review-tags" id="review-tags"></div>
+        </div>
+
+        <div class="form-group">
+          <label>评价内容</label>
+          <textarea id="review-textarea" class="review-textarea" maxlength="500" placeholder="说说这次寄养体验吧（选填）"></textarea>
+          <div class="char-count"><span id="review-char-now">0</span>/500</div>
+        </div>
+
+        <div class="form-group">
+          <label>照片（可选，jpg/png/webp，≤5MB/张，最多 6 张）</label>
+          <div class="review-upload">
+            <input type="file" id="review-file-input" accept="image/jpeg,image/png,image/webp" multiple style="display:none">
+            <button type="button" class="btn btn-secondary" id="review-pick-photo">+ 选择照片</button>
+          </div>
+          <div class="review-preview" id="review-preview"></div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-block" id="review-submit">
+          <span class="btn-text">提交评价</span>
+          <span class="btn-loading" style="display:none">提交中…</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="/js/api.js"></script>
   <script src="/js/pages/my.js"></script>
 </body>
