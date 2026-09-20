@@ -794,7 +794,7 @@ textarea {
 
 
 /* ============================================================
-   ¼ÄÑø Tab ¡¤ ×´Ì¬ Banner
+   ï¿½ï¿½ï¿½ï¿½ Tab ï¿½ï¿½ ×´Ì¬ Banner
    ============================================================ */
 .host-banner {
   display: flex;
@@ -842,7 +842,7 @@ textarea {
 .host-banner-info .host-banner-title { color: var(--color-info); }
 .host-banner-info .host-banner-sub { color: #4A6F94; }
 
-/* Ê×µ¥µ£±£ÌáÊ¾ */
+/* ï¿½×µï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ */
 .host-sponsor-hint {
   display: flex;
   gap: 12px;
@@ -862,7 +862,7 @@ textarea {
   cursor: pointer;
 }
 
-/* ¼ÄÑø±íµ¥ */
+/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 .host-form {
   padding: 18px 16px 20px;
   margin-bottom: 16px;
@@ -874,7 +874,7 @@ textarea {
   margin: 0 0 14px 0;
 }
 
-/* ¿É½Óµ¥ÈÕÆÚÇø */
+/* ï¿½É½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 .host-availability {
   padding: 18px 16px 20px;
   background: var(--color-card);
@@ -901,7 +901,7 @@ textarea {
   color: var(--color-text-muted);
 }
 
-/* ÈÕÀú */
+/* ï¿½ï¿½ï¿½ï¿½ */
 .cal-wrap {
   padding: 4px 0 8px;
 }
@@ -1013,7 +1013,7 @@ textarea {
   box-shadow: 0 0 0 2px rgba(180, 137, 214, 0.3);
 }
 
-/* ÒÑÌí¼ÓÇø¼äÁĞ±í */
+/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ±ï¿½ */
 .cal-ranges {
   margin-top: 12px;
   display: flex;
@@ -1633,4 +1633,155 @@ textarea {
 @keyframes skeleton-loading {
   0% { background-position: 100% 50%; }
   100% { background-position: 0 50%; }
+}
+
+
+/* ============ éœ€æ±‚ Tab Â· Task 9 ============ */
+#needs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* éœ€æ±‚å¡ç‰‡ */
+.need-card {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.need-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.need-pet-cover {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-cream);
+  flex-shrink: 0;
+}
+.need-pet-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+.need-card-title {
+  flex: 1;
+  min-width: 0;
+}
+.need-pet-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.need-pet-species {
+  font-size: 15px;
+}
+.need-pet-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.need-card-status {
+  flex-shrink: 0;
+}
+
+/* çŠ¶æ€å¾½ç«  */
+.badge-need-amber {
+  background: rgba(232, 168, 56, 0.15);
+  color: #B37A18;
+  border: 1px solid rgba(232, 168, 56, 0.35);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-need-blue {
+  background: rgba(91, 140, 200, 0.15);
+  color: #3E6B9E;
+  border: 1px solid rgba(91, 140, 200, 0.35);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-need-green {
+  background: rgba(107, 142, 90, 0.15);
+  color: #4F7040;
+  border: 1px solid rgba(107, 142, 90, 0.35);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-need-gray {
+  background: rgba(181, 164, 143, 0.2);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* éœ€æ±‚è¯¦æƒ…è¡Œ */
+.need-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--color-bg-cream);
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+}
+.need-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.need-label {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  min-width: 60px;
+}
+.need-value {
+  color: var(--color-text);
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* éœ€æ±‚æ“ä½œåŒº */
+.need-card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.need-card-actions .btn {
+  flex: 1;
+  min-width: 90px;
+}
+.need-cancel {
+  color: var(--color-text-muted);
+}
+.need-order-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  padding: 4px 0;
 }

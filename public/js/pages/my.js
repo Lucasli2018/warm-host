@@ -920,6 +920,292 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 初始加载（宠物 + 寄养并行）
+  // ============ 需求 Tab ============
+  // 状态映射
+  const NEED_STATUS = {
+    open:      { label: '招募中', kind: 'amber'  },
+    matched:   { label: '已接单', kind: 'blue'   },
+    filled:    { label: '已成交', kind: 'green'  },
+    cancelled: { label: '已取消', kind: 'gray'   },
+    expired:   { label: '已过期', kind: 'gray'   },
+  };
+  const PET_SPECIES_ICON_NEED = PET_SPECIES_ICON;
+
+  const needListEl = document.getElementById('needs-list');
+  const needModal = document.getElementById('need-modal');
+  const needForm = document.getElementById('need-form');
+  const needFormTitle = document.getElementById('need-modal-title');
+  const petSelect = needForm.querySelector('[name="petId"]');
+
+  let editingNeed = null;
+  let myPetsCache = [];
+
+  function statusBadge(status) {
+    const s = NEED_STATUS[status] || { label: status, kind: 'gray' };
+    return `<span class="badge badge-need-${s.kind}">${s.label}</span>`;
+  }
+
+  function fmtPriceYuan(cents) {
+    if (cents === null || cents === undefined || cents === '') return '面议';
+    const n = Number(cents);
+    if (!Number.isFinite(n)) return '面议';
+    return (n % 100 === 0 ? (n / 100).toString() : (n / 100).toFixed(2)) + ' 元/天';
+  }
+
+  function todayYMD() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function plusDaysYMD(n) {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  async function loadNeeds() {
+    try {
+      const needs = await ApiClient.get('/needs/my');
+      if (!needs || needs.length === 0) {
+        if (myPetsCache.length === 0) {
+          needListEl.innerHTML = `<div class="empty-state">
+            <span class="emoji">🐾</span>
+            <h3>还没有宠物档案</h3>
+            <p>先添加宠物档案才能发布寄养需求</p>
+            <button class="btn btn-primary" onclick="document.getElementById('btn-add-pet').click()">去添加宠物</button>
+          </div>`;
+        } else {
+          needListEl.innerHTML = `<div class="empty-state">
+            <span class="emoji">📝</span>
+            <h3>还没有寄养需求</h3>
+            <p>点击右上角「发布寄养需求」开始</p>
+          </div>`;
+        }
+        return;
+      }
+      needListEl.innerHTML = needs.map(renderNeedCard).join('');
+      needListEl.querySelectorAll('[data-action]').forEach(el => {
+        el.addEventListener('click', () => {
+          const needId = el.dataset.needId;
+          const action = el.dataset.action;
+          if (action === 'edit') openNeedModal(needId);
+          else if (action === 'cancel') confirmCancelNeed(needId, el);
+        });
+      });
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  function renderNeedCard(need) {
+    const pet = need.pet || {};
+    const cover = pet.cover_key ? `/api/pets/${pet.id}/photos/${pet.cover_key}` : '';
+    const coverHtml = cover
+      ? `<img class="need-pet-cover" src="${escapeHtml(cover)}" alt="${escapeHtml(pet.name || '')}">`
+      : `<div class="need-pet-cover need-pet-cover-placeholder">${PET_SPECIES_ICON_NEED[pet.species] || '🐾'}</div>`;
+    const metaBits = [];
+    if (pet.breed) metaBits.push(pet.breed);
+    if (pet.gender) metaBits.push(pet.gender);
+    if (pet.age) metaBits.push(pet.age);
+    const meta = metaBits.join(' · ');
+
+    const price = fmtPriceYuan(need.expected_price_cents);
+    const dateRange = need.start_date && need.end_date
+      ? `${need.start_date} 至 ${need.end_date}`
+      : '-';
+
+    let actionsHtml = '';
+    if (need.status === 'open') {
+      actionsHtml = `
+        <button class="btn btn-ghost" data-action="edit" data-need-id="${need.id}">编辑</button>
+        <button class="btn btn-ghost need-cancel" data-action="cancel" data-need-id="${need.id}">取消</button>
+      `;
+    } else if (need.status === 'matched' || need.status === 'filled') {
+      actionsHtml = `<div class="need-order-hint">${need.status === 'matched' ? '⚡ 寄养人已接单，请在订单中查看' : '🎉 已成交，可在订单中查看'}</div>`;
+    }
+
+    return `<div class="need-card card">
+      <div class="need-card-head">
+        ${coverHtml}
+        <div class="need-card-title">
+          <div class="need-pet-name">${escapeHtml(pet.name || '未命名宠物')} <span class="need-pet-species">${PET_SPECIES_ICON_NEED[pet.species] || '🐾'}</span></div>
+          ${meta ? `<div class="need-pet-meta">${escapeHtml(meta)}</div>` : ''}
+        </div>
+        <div class="need-card-status">${statusBadge(need.status)}</div>
+      </div>
+      <div class="need-card-body">
+        <div class="need-row"><span class="need-label">日期</span><span class="need-value">${escapeHtml(dateRange)}</span></div>
+        ${need.expected_area ? `<div class="need-row"><span class="need-label">期望区域</span><span class="need-value">${escapeHtml(need.expected_area)}</span></div>` : ''}
+        <div class="need-row"><span class="need-label">期望日费</span><span class="need-value">${escapeHtml(price)}</span></div>
+        ${need.description ? `<div class="need-row"><span class="need-label">说明</span><span class="need-value">${escapeHtml(need.description)}</span></div>` : ''}
+      </div>
+      ${actionsHtml ? `<div class="need-card-actions">${actionsHtml}</div>` : ''}
+    </div>`;
+  }
+
+  function resetNeedForm() {
+    needForm.reset();
+    needForm.querySelector('[name="needId"]').value = '';
+    editingNeed = null;
+    // 填充宠物下拉
+    petSelect.innerHTML = '<option value="">请选择宠物</option>' +
+      myPetsCache.map(p => `<option value="${p.id}">${escapeHtml(p.name)}${p.species ? ' · ' + (PET_SPECIES_ICON_NEED[p.species] || '🐾') : ''}${p.breed ? ' · ' + escapeHtml(p.breed) : ''}</option>`).join('');
+    // 默认日期：明天起 3 天
+    needForm.querySelector('[name="startDate"]').value = plusDaysYMD(1);
+    needForm.querySelector('[name="endDate"]').value = plusDaysYMD(3);
+    needForm.querySelector('[name="startDate"]').min = todayYMD();
+    needForm.querySelector('[name="endDate"]').min = plusDaysYMD(1);
+    document.getElementById('need-submit').textContent = '发布';
+    needFormTitle.textContent = '发布寄养需求';
+  }
+
+  function fillNeedForm(need) {
+    editingNeed = need;
+    needForm.reset();
+    petSelect.innerHTML = '<option value="">请选择宠物</option>' +
+      myPetsCache.map(p => `<option value="${p.id}">${escapeHtml(p.name)}${p.species ? ' · ' + (PET_SPECIES_ICON_NEED[p.species] || '🐾') : ''}${p.breed ? ' · ' + escapeHtml(p.breed) : ''}</option>`).join('');
+    needForm.querySelector('[name="needId"]').value = need.id;
+    needForm.querySelector('[name="petId"]').value = need.pet_id;
+    needForm.querySelector('[name="startDate"]').value = need.start_date;
+    needForm.querySelector('[name="endDate"]').value = need.end_date;
+    needForm.querySelector('[name="expectedArea"]').value = need.expected_area || '';
+    // 分 → 元
+    if (need.expected_price_cents !== null && need.expected_price_cents !== undefined) {
+      const yuan = need.expected_price_cents / 100;
+      needForm.querySelector('[name="expectedPrice"]').value = Number.isInteger(yuan) ? yuan : yuan.toFixed(2);
+    }
+    needForm.querySelector('[name="description"]').value = need.description || '';
+    needForm.querySelector('[name="startDate"]').min = todayYMD();
+    needForm.querySelector('[name="endDate"]').min = plusDaysYMD(1);
+    document.getElementById('need-submit').textContent = '保存修改';
+    needFormTitle.textContent = '编辑寄养需求';
+  }
+
+  function openNeedModal(needId) {
+    if (myPetsCache.length === 0) {
+      showToast('请先添加宠物档案', 'warning');
+      return;
+    }
+    if (!needId) {
+      resetNeedForm();
+      needModal.classList.add('show');
+      return;
+    }
+    ApiClient.get(`/needs/${needId}`).then(need => {
+      fillNeedForm(need);
+      needModal.classList.add('show');
+    }).catch(err => showToast(err.message, 'error'));
+  }
+
+  function closeNeedModal() {
+    needModal.classList.remove('show');
+    editingNeed = null;
+  }
+
+  document.getElementById('btn-add-need').addEventListener('click', () => {
+    openNeedModal(null);
+  });
+  needModal.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', closeNeedModal));
+  needModal.querySelector('.modal-mask').addEventListener('click', closeNeedModal);
+
+  needForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(needForm);
+    const data = Object.fromEntries(fd.entries());
+
+    if (!data.petId) {
+      showToast('请选择宠物', 'error');
+      return;
+    }
+    if (!data.startDate || !data.endDate) {
+      showToast('请选择日期区间', 'error');
+      return;
+    }
+    if (data.startDate >= data.endDate) {
+      showToast('起始日期必须早于结束日期', 'error');
+      return;
+    }
+    if (data.startDate < todayYMD()) {
+      showToast('起始日期不能早于今天', 'error');
+      return;
+    }
+
+    // 元 → 分
+    let expectedPriceCents = null;
+    if (data.expectedPrice !== '' && data.expectedPrice !== undefined && data.expectedPrice !== null) {
+      const yuan = Number(data.expectedPrice);
+      if (!Number.isFinite(yuan) || yuan < 0) {
+        showToast('期望日费必须为非负数字', 'error');
+        return;
+      }
+      expectedPriceCents = Math.round(yuan * 100);
+    }
+
+    const btn = document.getElementById('need-submit');
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = editingNeed ? '保存中…' : '发布中…';
+
+    try {
+      const payload = {
+        startDate: data.startDate,
+        endDate: data.endDate,
+        expectedArea: data.expectedArea || '',
+        expectedPriceCents,
+        description: data.description || '',
+      };
+      if (!editingNeed) {
+        payload.petId = data.petId;
+        await ApiClient.post('/needs', payload);
+        showToast('需求已发布', 'success');
+      } else {
+        await ApiClient.put(`/needs/${editingNeed.id}`, payload);
+        showToast('需求已更新', 'success');
+      }
+      closeNeedModal();
+      await loadNeeds();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  });
+
+  async function confirmCancelNeed(needId, el) {
+    if (el.dataset.confirming === '1') {
+      try {
+        await ApiClient.delete(`/needs/${needId}`);
+        showToast('需求已取消', 'success');
+        await loadNeeds();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    } else {
+      el.dataset.confirming = '1';
+      const originalText = el.textContent;
+      el.textContent = '再次点击确认取消';
+      el.style.color = 'var(--color-error)';
+      setTimeout(() => {
+        el.dataset.confirming = '0';
+        el.textContent = originalText;
+        el.style.color = '';
+      }, 3000);
+    }
+  }
+
+  // ============ 宠物缓存（供需求下拉） ============
+  async function refreshPetsCache() {
+    try {
+      const pets = await ApiClient.get('/pets/my');
+      myPetsCache = Array.isArray(pets) ? pets : [];
+    } catch (err) {
+      myPetsCache = [];
+    }
+  }
+
+  // 初始加载（宠物 + 寄养 + 需求 并行；宠物缓存后再拉需求）
   await Promise.all([loadPets(), loadHost()]);
+  await refreshPetsCache();
+  await loadNeeds();
 });
