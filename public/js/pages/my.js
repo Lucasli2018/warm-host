@@ -1,9 +1,24 @@
 // warm-host · 我的页面
-// 当前只做宠物 Tab 的基础功能，其余 3 Tab 占位
+// 宠物 Tab（CRUD + R2 多图）+ 寄养 Tab（档案 + 可接单日期）
+// 其余 2 Tab（需求、订单）占位
 
 const PET_SPECIES_ICON = { '猫': '🐱', '狗': '🐶', '兔': '🐰', '其他': '🐾' };
 const PERSONALITY_TAGS = ['友善', '粘人', '怕生', '拆家', '安静', '活泼'];
 const MAX_PHOTOS = 9;
+
+// ============ 寄养人相关常量 ============
+const HOST_SPECIES = ['猫', '狗', '兔', '其他'];
+const HOST_SIZES = ['小型', '中型', '大型'];
+const HOST_GENDERS = ['公', '母', '未知'];
+const HOST_SERVICES = ['可上门接送', '宠物医院合作', '有隔离空间', '24小时监控'];
+
+// 状态徽章文本
+const HOST_STATUS_LABELS = {
+  pending: '审核中',
+  active: '已通过',
+  rejected: '已拒绝',
+  suspended: '已暂停',
+};
 
 document.addEventListener('DOMContentLoaded', async () => {
   // 未登录跳转登录页
@@ -382,6 +397,529 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // 初始加载
-  await loadPets();
+  // ============ 寄养 Tab ============
+  // 状态:
+  //   none     - 未申请（未提交过申请，profile=null 且 status 非 pending/active/rejected/suspended）
+  //   pending  - 审核中（只读视图）
+  //   rejected - 已拒绝（可重新申请）
+  //   active   - 已通过（可编辑 + 可接单日期）
+  const HOST_STATES = {
+    NONE: 'none',
+    PENDING: 'pending',
+    REJECTED: 'rejected',
+    ACTIVE: 'active',
+  };
+
+  const hostBanner = document.getElementById('host-banner');
+  const hostSponsorHint = document.getElementById('host-sponsor-hint');
+  const hostForm = document.getElementById('host-form');
+  const hostFormTitle = document.getElementById('host-form-title');
+  const hostFormSubmit = document.getElementById('host-form-submit');
+  const hostAvailability = document.getElementById('host-availability');
+
+  // chips 容器
+  const capacitySpeciesChips = document.getElementById('capacity-species-chips');
+  const capacitySizeChips = document.getElementById('capacity-size-chips');
+  const capacityGenderChips = document.getElementById('capacity-gender-chips');
+  const specialServicesChips = document.getElementById('special-services-chips');
+
+  // 多选状态
+  const selectedSpecies = new Set();
+  const selectedSizes = new Set();
+  const selectedGenders = new Set();
+  const selectedServices = new Set();
+
+  // 当前寄养 Tab 状态
+  let hostState = HOST_STATES.NONE;
+  let currentProfile = null;
+  let currentAvailability = [];
+
+  // ============ Chip 通用渲染 ============
+  function renderChips(container, options, selectedSet, maxCount) {
+    container.innerHTML = options.map(o =>
+      `<span class="chip chip-cursor" data-value="${escapeHtml(o)}">${escapeHtml(o)}</span>`
+    ).join('');
+    container.querySelectorAll('.chip').forEach(c => {
+      c.addEventListener('click', () => {
+        const v = c.dataset.value;
+        if (selectedSet.has(v)) {
+          selectedSet.delete(v);
+          c.classList.remove('chip-primary');
+        } else {
+          if (maxCount && selectedSet.size >= maxCount) return;
+          selectedSet.add(v);
+          c.classList.add('chip-primary');
+        }
+      });
+    });
+  }
+  renderChips(capacitySpeciesChips, HOST_SPECIES, selectedSpecies);
+  renderChips(capacitySizeChips, HOST_SIZES, selectedSizes);
+  renderChips(capacityGenderChips, HOST_GENDERS, selectedGenders);
+  renderChips(specialServicesChips, HOST_SERVICES, selectedServices, 4);
+
+  function setChipsFromValues(container, selectedSet, values, maxCount) {
+    selectedSet.clear();
+    container.querySelectorAll('.chip').forEach(c => c.classList.remove('chip-primary'));
+    (values || []).forEach(v => {
+      if (maxCount && selectedSet.size >= maxCount) return;
+      selectedSet.add(v);
+      const chip = container.querySelector(`[data-value="${escapeAttr(v)}"]`);
+      if (chip) chip.classList.add('chip-primary');
+    });
+  }
+  function escapeAttr(s) {
+    return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  }
+
+  function readHostFormValues() {
+    return {
+      bio: (hostForm.querySelector('[name="bio"]').value || '').trim(),
+      capacity_count: parseInt(hostForm.querySelector('[name="capacity_count"]').value, 10),
+      daily_rate_cents: parseInt(hostForm.querySelector('[name="daily_rate_cents"]').value, 10),
+      district: (hostForm.querySelector('[name="district"]').value || '').trim(),
+      address_fuzzy: (hostForm.querySelector('[name="address_fuzzy"]').value || '').trim(),
+      experience: (hostForm.querySelector('[name="experience"]').value || '').trim(),
+      capacity_species: Array.from(selectedSpecies),
+      capacity_size: Array.from(selectedSizes),
+      capacity_gender: Array.from(selectedGenders),
+      special_services: Array.from(selectedServices),
+    };
+  }
+
+  function validateHostFormValues(v) {
+    if (!v.capacity_species.length) return '请至少选择一种可寄养品种';
+    if (!v.capacity_size.length) return '请至少选择一种可寄养体型';
+    if (!v.capacity_gender.length) return '请至少选择一种可寄养性别';
+    if (!Number.isFinite(v.capacity_count) || v.capacity_count < 1 || v.capacity_count > 10) {
+      return '同时寄养数量需在 1-10 之间';
+    }
+    if (!v.district) return '请填写所在区域';
+    if (!Number.isFinite(v.daily_rate_cents) || v.daily_rate_cents < 0) {
+      return '日费必须为非负整数（分）';
+    }
+    return null;
+  }
+
+  function setHostFormReadOnly(readOnly) {
+    hostForm.querySelectorAll('input, textarea, select').forEach(el => {
+      el.disabled = readOnly;
+    });
+    hostForm.querySelectorAll('.chip').forEach(c => {
+      c.style.pointerEvents = readOnly ? 'none' : '';
+    });
+  }
+
+  // ============ Banner 渲染 ============
+  function showBanner(html, kind) {
+    hostBanner.className = `host-banner host-banner-${kind || 'info'}`;
+    hostBanner.innerHTML = html;
+    hostBanner.classList.remove('host-banner-hidden');
+  }
+  function hideBanner() {
+    hostBanner.classList.add('host-banner-hidden');
+    hostBanner.innerHTML = '';
+  }
+  function showSponsorHint(html) {
+    hostSponsorHint.innerHTML = html;
+    hostSponsorHint.classList.remove('host-banner-hidden');
+  }
+  function hideSponsorHint() {
+    hostSponsorHint.classList.add('host-banner-hidden');
+    hostSponsorHint.innerHTML = '';
+  }
+
+  // ============ 寄养 Tab 主渲染 ============
+  async function loadHost() {
+    try {
+      const data = await ApiClient.get('/hosts/me');
+      const status = data.user?.host_status || 'none';
+      currentProfile = data.profile || null;
+      currentAvailability = data.availability || [];
+
+      if (status === 'active' && currentProfile) {
+        hostState = HOST_STATES.ACTIVE;
+        renderHostActive();
+      } else if (status === 'pending' && currentProfile) {
+        hostState = HOST_STATES.PENDING;
+        renderHostPending();
+      } else if (status === 'rejected' && currentProfile) {
+        hostState = HOST_STATES.REJECTED;
+        renderHostRejected();
+      } else if (status === 'suspended' && currentProfile) {
+        hostState = HOST_STATES.PENDING;
+        renderHostPending();
+      } else {
+        hostState = HOST_STATES.NONE;
+        renderHostNone();
+      }
+    } catch (err) {
+      if (err.message && err.message.includes('未登录')) {
+        location.href = '/auth.html';
+        return;
+      }
+      // 未申请时可能返回 403
+      if (err.message === '您尚未申请成为寄养人') {
+        hostState = HOST_STATES.NONE;
+        renderHostNone();
+        return;
+      }
+      showToast(err.message, 'error');
+    }
+  }
+
+  function renderHostNone() {
+    hideBanner();
+    hideSponsorHint();
+    hostFormTitle.textContent = '申请成为寄养人';
+    hostFormSubmit.textContent = '提交申请';
+    setHostFormReadOnly(false);
+    // 清空表单
+    hostForm.reset();
+    hostForm.querySelector('[name="capacity_count"]').value = 2;
+    hostForm.querySelector('[name="daily_rate_cents"]').value = 10000;
+    setChipsFromValues(capacitySpeciesChips, selectedSpecies, ['猫', '狗']);
+    setChipsFromValues(capacitySizeChips, selectedSizes, ['小型', '中型']);
+    setChipsFromValues(capacityGenderChips, selectedGenders, ['公', '母']);
+    setChipsFromValues(specialServicesChips, selectedServices, []);
+    hostAvailability.classList.add('host-banner-hidden');
+  }
+
+  function renderHostPending() {
+    showBanner(
+      `<span class="host-banner-icon">⏳</span>
+       <div>
+         <div class="host-banner-title">寄养人申请审核中</div>
+         <div class="host-banner-sub">管理员审核通过后即可设置可接单日期</div>
+       </div>`,
+      'amber'
+    );
+    hostFormTitle.textContent = '寄养人档案（审核中·只读）';
+    hostFormSubmit.style.display = 'none';
+    setHostFormReadOnly(true);
+    fillHostFormFromProfile(currentProfile);
+    hostAvailability.classList.add('host-banner-hidden');
+  }
+
+  function renderHostRejected() {
+    showBanner(
+      `<span class="host-banner-icon">⚠️</span>
+       <div>
+         <div class="host-banner-title">申请未通过</div>
+         <div class="host-banner-sub">您可以修改档案后重新提交申请</div>
+       </div>`,
+      'danger'
+    );
+    hostFormTitle.textContent = '修改档案 · 重新申请';
+    hostFormSubmit.style.display = '';
+    hostFormSubmit.textContent = '重新提交申请';
+    setHostFormReadOnly(false);
+    fillHostFormFromProfile(currentProfile);
+    hostAvailability.classList.add('host-banner-hidden');
+  }
+
+  function renderHostActive() {
+    hideBanner();
+    // 首单担保提示
+    if (!currentProfile.is_sponsored) {
+      showSponsorHint(
+        `<span class="host-banner-icon">🤝</span>
+         <div>
+           <div class="host-banner-title">首单需要担保人</div>
+           <div class="host-banner-sub">首单寄养需邀请担保人做信誉背书 · <span class="host-hint-link">去邀请</span></div>
+         </div>`
+      );
+    } else {
+      hideSponsorHint();
+    }
+    hostFormTitle.textContent = '寄养人档案（可编辑）';
+    hostFormSubmit.style.display = '';
+    hostFormSubmit.textContent = '保存修改';
+    setHostFormReadOnly(false);
+    fillHostFormFromProfile(currentProfile);
+    hostAvailability.classList.remove('host-banner-hidden');
+    initCalendar(); // initCalendar 内部会调用 renderCalendar + renderAvailabilityRanges
+  }
+
+  function fillHostFormFromProfile(profile) {
+    hostForm.reset();
+    if (!profile) return;
+    hostForm.querySelector('[name="bio"]').value = profile.bio || '';
+    hostForm.querySelector('[name="capacity_count"]').value = profile.capacity_count || 1;
+    hostForm.querySelector('[name="daily_rate_cents"]').value = profile.daily_rate_cents || 0;
+    hostForm.querySelector('[name="district"]').value = profile.district || '';
+    hostForm.querySelector('[name="address_fuzzy"]').value = profile.address_fuzzy || '';
+    hostForm.querySelector('[name="experience"]').value = profile.experience || '';
+    setChipsFromValues(capacitySpeciesChips, selectedSpecies, profile.capacity_species);
+    setChipsFromValues(capacitySizeChips, selectedSizes, profile.capacity_size);
+    setChipsFromValues(capacityGenderChips, selectedGenders, profile.capacity_gender);
+    setChipsFromValues(specialServicesChips, selectedServices, profile.special_services);
+  }
+
+  // ============ 表单提交（申请 / 更新 / 重新申请） ============
+  hostForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const v = readHostFormValues();
+    const err = validateHostFormValues(v);
+    if (err) {
+      showToast(err, 'error');
+      return;
+    }
+
+    const isApply = hostState === HOST_STATES.NONE || hostState === HOST_STATES.REJECTED;
+    const btn = hostFormSubmit;
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = isApply ? '提交中…' : '保存中…';
+
+    try {
+      if (isApply) {
+        await ApiClient.post('/hosts/apply', v);
+        showToast('申请已提交，等待审核', 'success');
+      } else {
+        await ApiClient.post('/hosts/me', v);
+        showToast('档案已更新', 'success');
+      }
+      await loadHost();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  });
+
+  // ============ 可接单日期日历 ============
+  // 状态
+  const calState = {
+    year: new Date().getFullYear(),
+    month: new Date().getMonth(), // 0-based
+    ranges: [], // [{id, start_date, end_date, note}]
+    pickingStart: null, // 'YYYY-MM-DD'
+    pickingEnd: null,
+    minDate: null, // 不允许选早于今天
+    maxDate: null, // 不允许选晚于 +1 年
+  };
+
+  function fmtYMD(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function parseYMD(str) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str || '');
+    if (!m) return null;
+    return new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+  }
+
+  function compareYMD(a, b) {
+    // 字符串比较即可（YYYY-MM-DD 字典序 == 时间序）
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+  }
+
+  function isInRange(dateStr, range) {
+    return compareYMD(dateStr, range.start_date) >= 0 && compareYMD(dateStr, range.end_date) <= 0;
+  }
+
+  function initCalendar() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    calState.minDate = today;
+    const max = new Date(today);
+    max.setFullYear(max.getFullYear() + 1);
+    calState.maxDate = max;
+    calState.year = today.getFullYear();
+    calState.month = today.getMonth();
+    // 同步已有区间
+    calState.ranges = currentAvailability.map(a => ({
+      id: a.id,
+      start_date: a.start_date,
+      end_date: a.end_date,
+      note: a.note || '',
+    }));
+    calState.pickingStart = null;
+    calState.pickingEnd = null;
+    renderCalendar();
+    renderAvailabilityRanges();
+  }
+
+  function renderCalendar() {
+    const grid = document.getElementById('cal-grid');
+    const monthLabel = document.getElementById('cal-month-label');
+    const prevBtn = document.getElementById('cal-prev');
+    const nextBtn = document.getElementById('cal-next');
+    if (!grid) return;
+
+    monthLabel.textContent = `${calState.year} 年 ${calState.month + 1} 月`;
+
+    // 边界：不允许早于当前月
+    const now = new Date();
+    now.setDate(1);
+    const curMonthStart = new Date(calState.year, calState.month, 1);
+    prevBtn.disabled = curMonthStart <= now;
+    // 不允许晚于当前月 +2 月
+    const maxMonthStart = new Date(now.getFullYear(), now.getMonth() + 2, 1);
+    nextBtn.disabled = curMonthStart >= maxMonthStart;
+
+    // 网格表头（周一为第一列）
+    const headers = ['一', '二', '三', '四', '五', '六', '日'];
+
+    // 计算该月 1 号是星期几（0=周日 → 周一为 0）
+    const firstDay = new Date(calState.year, calState.month, 1);
+    const firstWeekday = (firstDay.getDay() + 6) % 7; // 周一=0
+    const daysInMonth = new Date(calState.year, calState.month + 1, 0).getDate();
+
+    const todayStr = fmtYMD(new Date());
+    const minStr = calState.minDate ? fmtYMD(calState.minDate) : '';
+    const maxStr = calState.maxDate ? fmtYMD(calState.maxDate) : '';
+
+    let html = headers.map(h => `<div class="cal-head">${h}</div>`).join('');
+
+    // 前置空格
+    for (let i = 0; i < firstWeekday; i++) {
+      html += '<div class="cal-cell cal-cell-empty"></div>';
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = fmtYMD(new Date(calState.year, calState.month, d));
+      const inPast = minStr ? compareYMD(dateStr, minStr) < 0 : false;
+      const inFuture = maxStr ? compareYMD(dateStr, maxStr) > 0 : false;
+      const disabled = inPast || inFuture;
+      const isToday = dateStr === todayStr;
+      const inAnyRange = calState.ranges.some(r => isInRange(dateStr, r));
+      const isPickingStart = calState.pickingStart === dateStr;
+      const isPickingEnd = calState.pickingEnd === dateStr;
+      const inPickingRange = calState.pickingStart && calState.pickingEnd
+        ? isInRange(dateStr, { start_date: calState.pickingStart, end_date: calState.pickingEnd })
+        : false;
+
+      const classes = ['cal-cell'];
+      if (disabled) classes.push('cal-cell-disabled');
+      if (isToday) classes.push('cal-cell-today');
+      if (inAnyRange) classes.push('cal-cell-range');
+      if (inPickingRange) classes.push('cal-cell-picking');
+      if (isPickingStart || isPickingEnd) classes.push('cal-cell-anchor');
+
+      html += `<div class="${classes.join(' ')}" data-date="${dateStr}">${d}</div>`;
+    }
+
+    grid.innerHTML = html;
+
+    // 绑定点击
+    grid.querySelectorAll('.cal-cell[data-date]').forEach(cell => {
+      cell.addEventListener('click', () => onCalDateClick(cell.dataset.date));
+    });
+  }
+
+  function onCalDateClick(dateStr) {
+    // 未选中起点：设为起点
+    if (!calState.pickingStart) {
+      calState.pickingStart = dateStr;
+      calState.pickingEnd = null;
+    } else if (!calState.pickingEnd) {
+      if (compareYMD(dateStr, calState.pickingStart) < 0) {
+        showToast('结束日期需晚于起始日期', 'warning');
+        calState.pickingStart = dateStr;
+        calState.pickingEnd = null;
+      } else {
+        calState.pickingEnd = dateStr;
+        // 自动加入 ranges
+        const range = {
+          id: 'pending-' + crypto.randomUUID ? (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random()) : String(Date.now()),
+          start_date: calState.pickingStart,
+          end_date: calState.pickingEnd,
+          note: '',
+        };
+        calState.ranges.push(range);
+        calState.pickingStart = null;
+        calState.pickingEnd = null;
+      }
+    } else {
+      // 已有区间，重置
+      calState.pickingStart = dateStr;
+      calState.pickingEnd = null;
+    }
+    renderCalendar();
+    renderAvailabilityRanges();
+  }
+
+  function renderAvailabilityRanges() {
+    const box = document.getElementById('cal-ranges');
+    if (!box) return;
+    if (calState.ranges.length === 0) {
+      box.innerHTML = '<div class="cal-ranges-empty">尚未添加任何可接单区间</div>';
+      return;
+    }
+    box.innerHTML = calState.ranges.map((r, i) => {
+      const days = parseRangeDays(r.start_date, r.end_date);
+      return `<div class="cal-range-item">
+        <div class="cal-range-idx">#${i + 1}</div>
+        <div class="cal-range-body">
+          <div class="cal-range-date">${escapeHtml(r.start_date)} 至 ${escapeHtml(r.end_date)}</div>
+          <div class="cal-range-meta">${days} 天 · 未保存</div>
+        </div>
+        <button type="button" class="cal-range-del" data-idx="${i}" title="删除">×</button>
+      </div>`;
+    }).join('');
+    box.querySelectorAll('.cal-range-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        calState.ranges.splice(parseInt(btn.dataset.idx, 10), 1);
+        renderCalendar();
+        renderAvailabilityRanges();
+      });
+    });
+  }
+
+  function parseRangeDays(startStr, endStr) {
+    const s = parseYMD(startStr);
+    const e = parseYMD(endStr);
+    if (!s || !e) return 0;
+    return Math.round((e - s) / (24 * 60 * 60 * 1000)) + 1;
+  }
+
+  // ============ 日历导航按钮 ============
+  document.getElementById('cal-prev')?.addEventListener('click', () => {
+    calState.month--;
+    if (calState.month < 0) { calState.month = 11; calState.year--; }
+    renderCalendar();
+  });
+  document.getElementById('cal-next')?.addEventListener('click', () => {
+    calState.month++;
+    if (calState.month > 11) { calState.month = 0; calState.year++; }
+    renderCalendar();
+  });
+
+  // ============ 保存可接单日期 ============
+  document.getElementById('host-availability-save')?.addEventListener('click', async () => {
+    if (calState.ranges.length === 0) {
+      showToast('请先添加至少一个可接单区间', 'warning');
+      return;
+    }
+    const btn = document.getElementById('host-availability-save');
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = '保存中…';
+    try {
+      const payload = calState.ranges.map(r => ({
+        start_date: r.start_date,
+        end_date: r.end_date,
+        note: r.note || '',
+      }));
+      const res = await ApiClient.put('/hosts/me/availability', payload);
+      showToast(`已保存 ${res.count} 个区间`, 'success');
+      await loadHost();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  });
+
+  // 初始加载（宠物 + 寄养并行）
+  await Promise.all([loadPets(), loadHost()]);
 });

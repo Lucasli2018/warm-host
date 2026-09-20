@@ -48,12 +48,85 @@
       </div>
     </div>
 
-    <!-- 寄养 Tab 占位 -->
+    <!-- 寄养 Tab -->
     <div class="my-content" id="tab-host">
-      <div class="empty-state">
-        <span class="emoji">🏠</span>
-        <h3>寄养人档案</h3>
-        <p>Task 5 完善</p>
+      <!-- 状态提示卡片（根据 host_status 切换显示） -->
+      <div id="host-banner" class="host-banner host-banner-hidden"></div>
+
+      <!-- 首单担保提示 -->
+      <div id="host-sponsor-hint" class="host-sponsor-hint host-banner-hidden"></div>
+
+      <!-- 寄养人档案表单（申请表 + 编辑表共用一套 DOM，通过 host-status 控制可编辑性） -->
+      <form id="host-form" class="host-form card">
+        <h3 class="host-form-title" id="host-form-title">寄养人档案</h3>
+        <div class="form-group">
+          <label>自我介绍</label>
+          <textarea name="bio" maxlength="500" placeholder="说说你的养宠经验、居住环境…"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>同时寄养数量 <span class="required">*</span></label>
+            <input type="number" name="capacity_count" min="1" max="10" step="1" value="2" required>
+          </div>
+          <div class="form-group">
+            <label>日费（分）</label>
+            <input type="number" name="daily_rate_cents" min="0" step="100" value="10000">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>可寄养品种 <span class="required">*</span></label>
+          <div class="chip-group" id="capacity-species-chips"></div>
+        </div>
+        <div class="form-group">
+          <label>可寄养体型 <span class="required">*</span></label>
+          <div class="chip-group" id="capacity-size-chips"></div>
+        </div>
+        <div class="form-group">
+          <label>可寄养性别 <span class="required">*</span></label>
+          <div class="chip-group" id="capacity-gender-chips"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>所在区域 <span class="required">*</span></label>
+            <input type="text" name="district" maxlength="20" placeholder="如：朝阳区" required>
+          </div>
+          <div class="form-group">
+            <label>详细位置（模糊）</label>
+            <input type="text" name="address_fuzzy" maxlength="100" placeholder="如：某小区">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>养宠经验</label>
+          <textarea name="experience" maxlength="500" placeholder="如：养过 3 只柯基，英短 5 年"></textarea>
+        </div>
+        <div class="form-group">
+          <label>特殊服务</label>
+          <div class="chip-group" id="special-services-chips"></div>
+        </div>
+        <button type="submit" id="host-form-submit" class="btn btn-primary btn-block">提交申请</button>
+      </form>
+
+      <!-- 可接单日期区（仅 active 可见） -->
+      <div id="host-availability" class="host-availability host-banner-hidden">
+        <div class="host-availability-header">
+          <h3>可接单日期</h3>
+          <span class="hint">点选两个日期形成区间，可添加多个</span>
+        </div>
+        <div class="cal-wrap">
+          <div class="cal-nav">
+            <button type="button" class="cal-nav-btn" id="cal-prev">‹</button>
+            <div class="cal-month-label" id="cal-month-label">- 月</div>
+            <button type="button" class="cal-nav-btn" id="cal-next">›</button>
+          </div>
+          <div class="cal-legend">
+            <span class="cal-legend-item"><i class="cal-legend-swatch cal-legend-today"></i>今天</span>
+            <span class="cal-legend-item"><i class="cal-legend-swatch cal-legend-picking"></i>点选中</span>
+            <span class="cal-legend-item"><i class="cal-legend-swatch cal-legend-range"></i>可接单</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+        <div class="cal-ranges" id="cal-ranges"></div>
+        <button type="button" id="host-availability-save" class="btn btn-primary btn-block">保存可接单日期</button>
       </div>
     </div>
 
