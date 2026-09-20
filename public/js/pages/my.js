@@ -29,13 +29,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ============ Tab 切换 ============
   const tabs = document.querySelectorAll('.my-tab');
+  let activeTabName = 'pets';
+  function activateTab(name) {
+    tabs.forEach(x => x.classList.toggle('active', x.dataset.tab === name));
+    document.querySelectorAll('.my-content').forEach(c =>
+      c.classList.toggle('active', c.id === `tab-${name}`)
+    );
+    activeTabName = name;
+  }
   tabs.forEach(t => {
-    t.addEventListener('click', () => {
-      tabs.forEach(x => x.classList.toggle('active', x === t));
-      document.querySelectorAll('.my-content').forEach(c =>
-        c.classList.toggle('active', c.id === `tab-${t.dataset.tab}`)
-      );
-    });
+    t.addEventListener('click', () => activateTab(t.dataset.tab));
   });
 
   // ============ 退出登录 ============
@@ -1204,8 +1207,343 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // ============ 订单 Tab ============
+  // 状态 → 徽章类名 + 文案映射
+  const ORDER_STATUS = {
+    pending:     { label: '等待确认', cls: 'badge-order-amber' },
+    accepted:    { label: '已确认',   cls: 'badge-order-blue'  },
+    in_progress: { label: '进行中',   cls: 'badge-order-green' },
+    completed:   { label: '已完成',   cls: 'badge-order-done'  },
+    cancelled:   { label: '已取消',   cls: 'badge-order-gray'  },
+    disputed:    { label: '申诉中',   cls: 'badge-order-red'   },
+  };
+
+  const ordersListEl = document.getElementById('orders-list');
+  const ordersRoleSeg = document.getElementById('orders-role-seg');
+  let currentRole = 'owner';
+
+  function fmtMD(dateStr) {
+    if (!dateStr) return '-';
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+    if (!m) return dateStr;
+    return `${m[2]}-${m[3]}`;
+  }
+
+  function fmtDT(iso) {
+    if (!iso) return '-';
+    try {
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    } catch {
+      return iso;
+    }
+  }
+
+  function orderDateRange(o) {
+    const s = fmtMD(o.startDate);
+    const e = fmtMD(o.endDate);
+    const days = o.durationDays || parseRangeDays(o.startDate, o.endDate);
+    return `${s} ~ ${e}（${days} 天）`;
+  }
+
+  function orderStatusBadge(status) {
+    const s = ORDER_STATUS[status] || { label: status, cls: 'badge-order-gray' };
+    return `<span class="badge ${s.cls}">${s.label}</span>`;
+  }
+
+  function avatarHtml(userId, avatarKey, fallbackEmoji) {
+    if (userId && avatarKey) {
+      const fallback = fallbackEmoji || '👤';
+      return `<img class="order-peer-avatar" src="/api/users/${escapeHtml(userId)}/photo" alt="" onerror="this.outerHTML='<div class=\\"order-peer-avatar-fallback\\">${fallback}</div>'">`;
+    }
+    return `<div class="order-peer-avatar-fallback">${fallbackEmoji || '👤'}</div>`;
+  }
+
+  function renderOrderCard(o) {
+    const pet = o.pet || {};
+    const petIcon = PET_SPECIES_ICON[pet.species] || '🐾';
+    const petCoverUrl = pet.coverKey ? `/api/pets/${pet.id}/photos/${pet.coverKey}` : '';
+    const petCoverHtml = petCoverUrl
+      ? `<img class="order-pet-cover" src="${escapeHtml(petCoverUrl)}" alt="${escapeHtml(pet.name || '')}" onerror="this.outerHTML='<div class=\\"order-pet-cover order-pet-cover-placeholder\\">${petIcon}</div>'">`
+      : `<div class="order-pet-cover order-pet-cover-placeholder">${petIcon}</div>`;
+
+    // 对方信息：isOwnerView 时显示 host，否则显示 owner
+    const peer = o.isOwnerView ? (o.host || {}) : (o.owner || {});
+    const peerLabel = o.isOwnerView
+      ? (peer.district || peer.addressFuzzy || '未知区域')
+      : '宠物主人';
+    const peerFallback = o.isOwnerView ? '🏠' : '👤';
+    const peerAvatarHtml = avatarHtml(peer.id, peer.avatarKey, peerFallback);
+
+    // 金额
+    const priceText = formatPrice(o.totalPriceCents);
+    let amountHtml = `
+      <div class="order-amount-row">
+        <span class="order-amount-label">参考总价</span>
+        <span class="order-amount-value">¥${escapeHtml(priceText)}</span>
+      </div>`;
+    if (o.isOwnerView && o.host && o.host.dailyRateCents) {
+      amountHtml += `<div class="order-amount-sub">寄养人参考价 ¥${escapeHtml(formatPrice(o.host.dailyRateCents))} / 天</div>`;
+    }
+
+    // 操作区
+    const isOwner = o.isOwnerView;
+    let actionsHtml = '';
+    if (o.status === 'pending') {
+      if (isOwner) {
+        actionsHtml = `
+          <button class="btn btn-primary btn-flex" data-action="accept" data-order-id="${o.id}">确认接单</button>
+          <button class="btn btn-secondary btn-flex" data-action="cancel" data-order-id="${o.id}">取消</button>`;
+      } else {
+        actionsHtml = `
+          <div class="order-hint">⏳ 等待主人确认</div>
+          <button class="btn btn-secondary btn-flex" data-action="cancel" data-order-id="${o.id}">取消</button>`;
+      }
+    } else if (o.status === 'accepted') {
+      if (isOwner) {
+        actionsHtml = `
+          <div class="order-hint">🤝 等待寄养人交接</div>
+          <button class="btn btn-secondary btn-flex" data-action="cancel" data-order-id="${o.id}">取消</button>`;
+      } else {
+        actionsHtml = `
+          <button class="btn btn-primary btn-flex" data-action="start" data-order-id="${o.id}">确认开始寄养</button>
+          <button class="btn btn-secondary btn-flex" data-action="cancel" data-order-id="${o.id}">取消</button>`;
+      }
+    } else if (o.status === 'in_progress') {
+      if (isOwner) {
+        actionsHtml = `
+          <div class="order-hint">🐾 寄养进行中</div>
+          <button class="btn btn-secondary btn-flex" data-action="dispute" data-order-id="${o.id}">发起申诉</button>`;
+      } else {
+        actionsHtml = `
+          <button class="btn btn-primary btn-flex" data-action="complete" data-order-id="${o.id}">完成寄养</button>
+          <button class="btn btn-secondary btn-flex" data-action="dispute" data-order-id="${o.id}">发起申诉</button>`;
+      }
+    } else if (o.status === 'completed') {
+      actionsHtml = `
+        <div class="order-hint">🎉 本次寄养已完成</div>
+        <a class="btn btn-primary btn-flex" href="/my.html?tab=orders&order=${o.id}" data-review-link="${o.id}">去评价</a>`;
+    } else if (o.status === 'cancelled') {
+      actionsHtml = `<div class="order-hint">🚫 订单已取消</div>`;
+    } else if (o.status === 'disputed') {
+      actionsHtml = `<div class="order-hint">⚠️ 等待管理员处理</div>`;
+    }
+
+    // 详情折叠区
+    const personalityTags = (pet.personality || []).map(t => `<span class="chip chip-cta">${escapeHtml(t)}</span>`).join('');
+    const timeline = [];
+    if (o.createdAt)   timeline.push({ t: o.createdAt,   label: '订单创建' });
+    if (o.acceptedAt)  timeline.push({ t: o.acceptedAt,  label: '主人确认接单' });
+    if (o.startedAt)   timeline.push({ t: o.startedAt,   label: '寄养已开始' });
+    if (o.completedAt) timeline.push({ t: o.completedAt, label: '寄养完成' });
+    if (o.cancelledAt) timeline.push({ t: o.cancelledAt, label: '订单取消' });
+    const timelineHtml = timeline.length
+      ? `<div class="order-timeline">${timeline.map(x => `<div class="order-timeline-item"><span class="order-timeline-time">${escapeHtml(fmtDT(x.t))}</span><span class="order-timeline-label">${escapeHtml(x.label)}</span></div>`).join('')}</div>`
+      : '';
+
+    const detailHtml = `
+      <div class="order-detail-expand">
+        ${personalityTags ? `<div class="order-detail-row"><span class="order-detail-label">宠物性格</span><div class="order-detail-chips">${personalityTags}</div></div>` : ''}
+        ${pet.healthNotes ? `<div class="order-detail-row"><span class="order-detail-label">健康说明</span><div class="order-detail-text">${escapeHtml(pet.healthNotes)}</div></div>` : ''}
+        ${pet.dailyHabits ? `<div class="order-detail-row"><span class="order-detail-label">日常习惯</span><div class="order-detail-text">${escapeHtml(pet.dailyHabits)}</div></div>` : ''}
+        ${pet.specialNeeds ? `<div class="order-detail-row"><span class="order-detail-label">特殊需求</span><div class="order-detail-text">${escapeHtml(pet.specialNeeds)}</div></div>` : ''}
+        ${o.host && o.host.id ? `<div class="order-detail-row"><span class="order-detail-label">寄养人区域</span><div class="order-detail-text">${escapeHtml(o.host.district || o.host.addressFuzzy || '-')}</div></div>` : ''}
+        ${timelineHtml}
+      </div>`;
+
+    return `
+      <div class="order-card card" data-order-id="${o.id}">
+        <div class="order-card-body" data-toggle-detail>
+          <div class="order-card-head">
+            <span class="order-card-badge">${orderStatusBadge(o.status)}</span>
+            <span class="order-card-date">${escapeHtml(orderDateRange(o))}</span>
+          </div>
+          <div class="order-card-pet">
+            ${petCoverHtml}
+            <div class="order-pet-info">
+              <div class="order-pet-name">${escapeHtml(pet.name || '未命名宠物')} <span class="order-pet-icon">${petIcon}</span></div>
+              ${pet.breed ? `<div class="order-pet-breed">${escapeHtml(pet.breed)}</div>` : ''}
+              <div class="order-pet-meta">${escapeHtml([pet.gender, pet.age].filter(Boolean).join(' · '))}</div>
+            </div>
+          </div>
+          <div class="order-card-peer">
+            ${peerAvatarHtml}
+            <div class="order-peer-info">
+              <div class="order-peer-name">${escapeHtml(peer.nickname || '未知用户')}</div>
+              <div class="order-peer-region">${escapeHtml(peerLabel)}</div>
+            </div>
+          </div>
+          ${amountHtml}
+        </div>
+        ${actionsHtml ? `<div class="order-card-actions">${actionsHtml}</div>` : ''}
+        ${detailHtml}
+      </div>`;
+  }
+
+  function renderOrderSkeleton() {
+    ordersListEl.innerHTML = `
+      <div class="order-skeleton">
+        <div class="skeleton" style="height:14px;width:40%;margin-bottom:10px"></div>
+        <div class="skeleton" style="height:14px;width:30%;margin-bottom:10px"></div>
+        <div class="skeleton" style="height:120px;margin-bottom:14px"></div>
+        <div class="skeleton" style="height:120px;margin-bottom:14px"></div>
+        <div class="skeleton" style="height:120px"></div>
+      </div>`;
+  }
+
+  function renderOrderEmpty(role) {
+    if (role === 'host') {
+      ordersListEl.innerHTML = `<div class="order-empty">
+        <span class="emoji">🏠</span>
+        <h3>还没有寄养订单</h3>
+        <p>当有主人下单给你时，订单会出现在这里</p>
+      </div>`;
+    } else {
+      ordersListEl.innerHTML = `<div class="order-empty">
+        <span class="emoji">📋</span>
+        <h3>还没有寄养订单</h3>
+        <p>在「需求」Tab 发布需求，被寄养人接单后生成订单</p>
+      </div>`;
+    }
+  }
+
+  async function loadOrders() {
+    renderOrderSkeleton();
+    try {
+      const data = await ApiClient.get(`/orders/my?role=${currentRole}`);
+      const orders = (data && data.orders) || [];
+      if (orders.length === 0) {
+        renderOrderEmpty(currentRole);
+        return;
+      }
+      ordersListEl.innerHTML = orders.map(renderOrderCard).join('');
+      // 绑定操作按钮
+      ordersListEl.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          confirmOrderAction(btn, btn.dataset.orderId, btn.dataset.action);
+        });
+      });
+      // 评价链接（占位提示）
+      ordersListEl.querySelectorAll('[data-review-link]').forEach(a => {
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          showToast('评价功能即将开放', 'info');
+        });
+      });
+      // 卡片点击 → 展开详情
+      ordersListEl.querySelectorAll('.order-card').forEach(card => {
+        const body = card.querySelector('[data-toggle-detail]');
+        if (body) {
+          body.addEventListener('click', () => {
+            card.classList.toggle('order-card-expanded');
+          });
+        }
+      });
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  // 角色切换
+  function setRole(role) {
+    if (role !== 'owner' && role !== 'host') role = 'owner';
+    currentRole = role;
+    ordersRoleSeg.querySelectorAll('.seg-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.role === role);
+    });
+    loadOrders();
+  }
+  ordersRoleSeg.querySelectorAll('.seg-btn').forEach(b => {
+    b.addEventListener('click', () => setRole(b.dataset.role));
+  });
+
+  // ============ 状态操作自定义确认弹窗 ============
+  let confirmState = null;
+  function confirmOrderAction(btn, orderId, action) {
+    if (!orderId || !action) return;
+    // 幂等：已打开则忽略
+    if (confirmState && confirmState.open) return;
+    const modal = document.getElementById('order-confirm-modal');
+    const titleEl = document.getElementById('order-confirm-title');
+    const descEl = document.getElementById('order-confirm-desc');
+    const cancelBtn = document.getElementById('order-confirm-cancel');
+    const okBtn = document.getElementById('order-confirm-ok');
+    const okText = okBtn.querySelector('.btn-text');
+    const okLoading = okBtn.querySelector('.btn-loading');
+
+    const titles = {
+      accept:   '确认接单？',
+      start:    '确认开始寄养？',
+      complete: '确认完成寄养？',
+      cancel:   '取消订单？',
+      dispute:  '发起申诉？',
+    };
+    const descs = {
+      accept:   '确认后寄养人需与主人交接，订单进入「已确认」状态',
+      start:    '确认后订单进入「进行中」，宠物进入你照看',
+      complete: '确认寄养已顺利完成，宠物已交还主人',
+      cancel:   '取消后订单不可恢复，请谨慎操作',
+      dispute:  '发起申诉后订单将等待管理员人工介入',
+    };
+
+    titleEl.textContent = titles[action] || '确认操作？';
+    descEl.textContent = descs[action] || '';
+    okText.style.display = '';
+    okLoading.style.display = 'none';
+    okBtn.disabled = false;
+    modal.classList.add('show');
+    confirmState = { open: true, orderId, action, btn };
+
+    cancelBtn.onclick = () => closeConfirm();
+    modal.querySelector('.modal-mask').onclick = () => closeConfirm();
+    modal.querySelector('[data-close]').onclick = () => closeConfirm();
+
+    okBtn.onclick = async () => {
+      if (!confirmState || !confirmState.open) return;
+      okText.style.display = 'none';
+      okLoading.style.display = '';
+      okBtn.disabled = true;
+      try {
+        const res = await ApiClient.post(`/orders/${orderId}/status`, { action });
+        showToast(res && res.label ? res.label : '操作成功', 'success');
+        closeConfirm();
+        await loadOrders();
+      } catch (err) {
+        showToast(err.message, 'error');
+        okText.style.display = '';
+        okLoading.style.display = 'none';
+        okBtn.disabled = false;
+      }
+    };
+  }
+  function closeConfirm() {
+    const modal = document.getElementById('order-confirm-modal');
+    modal.classList.remove('show');
+    if (confirmState) {
+      confirmState.open = false;
+      confirmState = null;
+    }
+  }
+
   // 初始加载（宠物 + 寄养 + 需求 并行；宠物缓存后再拉需求）
   await Promise.all([loadPets(), loadHost()]);
   await refreshPetsCache();
   await loadNeeds();
+
+  // ============ URL 参数 (?tab=orders & role=host) ============
+  try {
+    const params = new URLSearchParams(location.search);
+    const initRole = params.get('role') === 'host' ? 'host' : 'owner';
+    if (params.get('tab') === 'orders') {
+      activateTab('orders');
+      setRole(initRole);
+    } else {
+      // 默认 owner 角色，但不主动加载（避免无用请求）
+      setRole(initRole);
+    }
+  } catch (err) {
+    // URL 解析失败静默
+  }
 });

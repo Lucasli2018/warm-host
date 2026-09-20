@@ -36,12 +36,21 @@
       <div id="needs-list"></div>
     </div>
 
-    <!-- 订单 Tab 占位 -->
+    <!-- 订单 Tab -->
     <div class="my-content" id="tab-orders">
-      <div class="empty-state">
-        <span class="emoji">📋</span>
-        <h3>订单管理</h3>
-        <p>Task 10 完善</p>
+      <div class="order-tabs-role">
+        <div class="seg-control" id="orders-role-seg">
+          <button type="button" class="seg-btn active" data-role="owner">我是主人</button>
+          <button type="button" class="seg-btn" data-role="host">我是寄养人</button>
+        </div>
+      </div>
+      <div id="orders-list">
+        <div class="order-skeleton">
+          <div class="skeleton" style="height:14px;width:40%;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:64px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:64px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:64px"></div>
+        </div>
       </div>
     </div>
 
@@ -247,6 +256,27 @@
           </div>
           <button type="submit" class="btn btn-primary btn-block" id="need-submit">发布</button>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 订单操作确认弹窗 -->
+  <div id="order-confirm-modal" class="modal">
+    <div class="modal-mask"></div>
+    <div class="modal-content" style="max-width:420px">
+      <div class="modal-header">
+        <h3 id="order-confirm-title">确认操作？</h3>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body">
+        <p id="order-confirm-desc" style="font-size:14px;line-height:1.7;color:var(--color-text);margin-bottom:20px"></p>
+        <div style="display:flex;gap:10px">
+          <button type="button" id="order-confirm-cancel" class="btn btn-secondary btn-block">取消</button>
+          <button type="button" id="order-confirm-ok" class="btn btn-primary btn-block">
+            <span class="btn-text">确认</span>
+            <span class="btn-loading" style="display:none">处理中…</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

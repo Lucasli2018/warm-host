@@ -1785,3 +1785,376 @@ textarea {
   color: var(--color-text-muted);
   padding: 4px 0;
 }
+
+/* ============ 订单 Tab · Task 10b ============ */
+
+/* 角色切换 */
+.order-tabs-role {
+  margin-bottom: 14px;
+}
+.seg-control {
+  display: flex;
+  background: var(--color-bg-cream);
+  border-radius: var(--radius-button);
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid var(--color-border);
+}
+.seg-btn {
+  flex: 1;
+  min-height: 38px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+  background: transparent;
+}
+.seg-btn.active {
+  background: var(--color-card);
+  color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(139, 94, 60, 0.1);
+}
+
+/* 订单列表容器 */
+#orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+/* 订单卡片 */
+.order-card {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.order-card-body {
+  cursor: pointer;
+}
+.order-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.order-card-badge {
+  display: inline-flex;
+}
+.order-card-date {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+}
+
+/* 状态徽章 */
+.badge-order-amber {
+  background: rgba(232, 168, 56, 0.15);
+  color: #B37A18;
+  border: 1px solid rgba(232, 168, 56, 0.35);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-order-blue {
+  background: rgba(91, 140, 200, 0.15);
+  color: #3E6B9E;
+  border: 1px solid rgba(91, 140, 200, 0.35);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-order-green {
+  background: rgba(107, 142, 90, 0.18);
+  color: #4F7040;
+  border: 1px solid rgba(107, 142, 90, 0.4);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-order-done {
+  background: rgba(85, 112, 72, 0.22);
+  color: #3D5432;
+  border: 1px solid rgba(85, 112, 72, 0.45);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-order-gray {
+  background: rgba(181, 164, 143, 0.2);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-order-red {
+  background: rgba(201, 76, 76, 0.14);
+  color: #A03B3B;
+  border: 1px solid rgba(201, 76, 76, 0.35);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 宠物信息 */
+.order-card-pet {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--color-bg-cream);
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+}
+.order-pet-cover {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  flex-shrink: 0;
+}
+.order-pet-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+.order-pet-info {
+  flex: 1;
+  min-width: 0;
+}
+.order-pet-name {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.order-pet-icon { font-size: 15px; }
+.order-pet-breed {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+.order-pet-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* 对方信息 */
+.order-card-peer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px 2px;
+}
+.order-peer-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--color-bg-cream);
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+.order-peer-avatar-fallback {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(139, 94, 60, 0.1);
+  border: 1px solid var(--color-border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.order-peer-info {
+  flex: 1;
+  min-width: 0;
+}
+.order-peer-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.order-peer-region {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 1px;
+}
+
+/* 金额行 */
+.order-card-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: rgba(232, 132, 92, 0.08);
+  border-radius: 8px;
+  border: 1px solid rgba(232, 132, 92, 0.2);
+  margin-top: 2px;
+}
+.order-amount-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.order-amount-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.order-amount-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-cta-dark);
+  font-family: var(--font-mono);
+}
+.order-amount-sub {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* 操作区 */
+.order-card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.order-card-actions .btn {
+  flex: 1;
+  min-width: 100px;
+}
+.btn-flex {
+  flex: 1;
+  min-width: 100px;
+}
+
+/* 空状态 & 提示 */
+.order-empty {
+  text-align: center;
+  padding: 40px 20px;
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  border: 1px dashed var(--color-border);
+}
+.order-empty .emoji {
+  font-size: 42px;
+  display: block;
+  margin-bottom: 10px;
+}
+.order-empty h3 {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+.order-empty p {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+.order-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  padding: 4px 0;
+  flex: 1;
+  min-width: 100px;
+  text-align: center;
+}
+
+/* 详情折叠 */
+.order-detail-expand {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--color-bg-cream);
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+}
+.order-card-expanded .order-detail-expand {
+  display: flex;
+  animation: fadeIn 0.2s ease-out;
+}
+.order-detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.order-detail-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+.order-detail-text {
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.order-detail-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* 时间线 */
+.order-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 12px;
+  border-left: 2px solid var(--color-border-strong);
+  margin-top: 4px;
+}
+.order-timeline-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.order-timeline-time {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+  font-size: 11px;
+}
+.order-timeline-label {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+/* 骨架屏 */
+.order-skeleton {
+  padding: 16px;
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-border);
+}
