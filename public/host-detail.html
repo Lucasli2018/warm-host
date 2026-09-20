@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>寄养人详情 - warm-host</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/cn-fontsource-noto-serif-sc-regular@1.0.0/index.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/cn-fontsource-noto-sans-sc-regular@1.0.0/index.css" rel="stylesheet">
+</head>
+<body>
+  <div class="header">
+    <a href="/hosts.html" class="header-back" title="返回列表">←</a>
+    <span class="header-title">寄养人详情</span>
+    <span class="header-placeholder"></span>
+  </div>
+
+  <div class="container page-with-cta">
+
+    <!-- 加载状态 -->
+    <div id="loading-state" class="empty-state">
+      <span class="emoji">⏳</span>
+      <h3>加载中…</h3>
+    </div>
+
+    <!-- 404 / 不存在 -->
+    <div id="not-found-state" class="empty-state" style="display:none">
+      <span class="emoji">🔍</span>
+      <h3>该寄养人不存在或已下线</h3>
+      <p>可能已取消寄养资格</p>
+      <a class="btn btn-secondary" href="/hosts.html">返回列表</a>
+    </div>
+
+    <!-- 主内容 -->
+    <div id="detail-content" style="display:none">
+
+      <!-- 头部卡 -->
+      <div id="detail-header" class="detail-header card">
+        <div class="detail-avatar-wrap">
+          <img id="detail-avatar" class="detail-avatar" alt="">
+          <div id="detail-avatar-fallback" class="detail-avatar detail-avatar-fallback" style="display:none">🏠</div>
+        </div>
+        <div class="detail-header-body">
+          <div class="detail-header-title-row">
+            <h2 id="detail-name" class="detail-name"></h2>
+            <div id="detail-badges" class="detail-badges"></div>
+          </div>
+          <div class="detail-header-meta">
+            <span id="detail-stars" class="detail-stars"></span>
+            <span id="detail-rating-num" class="detail-rating-num"></span>
+            <span id="detail-reviews" class="detail-reviews"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 基本信息卡 -->
+      <div class="card info-card">
+        <h3 class="section-title">基本信息</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">📍 区域</span>
+            <span id="detail-region" class="info-value"></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">💰 参考日费</span>
+            <span id="detail-price" class="info-value"></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">🐾 容量</span>
+            <span id="detail-capacity" class="info-value"></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">🐱 品种</span>
+            <span id="detail-species" class="info-value"></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">📏 体型</span>
+            <span id="detail-size" class="info-value"></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">⚥ 性别</span>
+            <span id="detail-gender" class="info-value"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 自我介绍 + 养宠经历 -->
+      <div class="card">
+        <h3 class="section-title">自我介绍</h3>
+        <p id="detail-bio" class="detail-text"></p>
+        <h3 class="section-title" style="margin-top:16px">养宠经历</h3>
+        <p id="detail-experience" class="detail-text"></p>
+      </div>
+
+      <!-- 特殊服务 -->
+      <div id="detail-services-wrap" class="card" style="display:none">
+        <h3 class="section-title">特殊服务</h3>
+        <div id="detail-services" class="chip-group"></div>
+      </div>
+
+      <!-- 可接单日期 -->
+      <div class="card">
+        <h3 class="section-title">可接单日期</h3>
+        <div id="detail-availability" class="availability-list"></div>
+      </div>
+
+      <!-- 评价 -->
+      <div class="card">
+        <div class="reviews-header">
+          <h3 class="section-title">评价</h3>
+        </div>
+        <!-- 评分分布 -->
+        <div class="rating-summary">
+          <div class="rating-avg">
+            <div id="reviews-avg" class="rating-avg-num">-</div>
+            <div id="reviews-avg-stars" class="rating-avg-stars"></div>
+            <div id="reviews-count" class="rating-avg-count"></div>
+          </div>
+          <div class="rating-bars">
+            <div class="rating-bar-row" data-rating="5"><span class="rating-bar-label">5★</span><div class="rating-bar-track"><div class="rating-bar" data-rating="5"></div></div><span class="rating-bar-count" data-count="5">0</span></div>
+            <div class="rating-bar-row" data-rating="4"><span class="rating-bar-label">4★</span><div class="rating-bar-track"><div class="rating-bar" data-rating="4"></div></div><span class="rating-bar-count" data-count="4">0</span></div>
+            <div class="rating-bar-row" data-rating="3"><span class="rating-bar-label">3★</span><div class="rating-bar-track"><div class="rating-bar" data-rating="3"></div></div><span class="rating-bar-count" data-count="3">0</span></div>
+            <div class="rating-bar-row" data-rating="2"><span class="rating-bar-label">2★</span><div class="rating-bar-track"><div class="rating-bar" data-rating="2"></div></div><span class="rating-bar-count" data-count="2">0</span></div>
+            <div class="rating-bar-row" data-rating="1"><span class="rating-bar-label">1★</span><div class="rating-bar-track"><div class="rating-bar" data-rating="1"></div></div><span class="rating-bar-count" data-count="1">0</span></div>
+          </div>
+        </div>
+        <!-- 评价列表 -->
+        <div id="reviews-list" class="reviews-list"></div>
+        <div id="reviews-load-more-wrap" style="display:none; margin-top:16px;">
+          <button type="button" id="btn-reviews-more" class="btn btn-secondary btn-block">加载更多</button>
+        </div>
+        <div id="reviews-empty" class="empty-state" style="display:none">
+          <span class="emoji">💬</span>
+          <h3>还没有评价</h3>
+          <p>成为第一个评价的人</p>
+        </div>
+      </div>
+
+      <div style="height:24px"></div>
+    </div>
+  </div>
+
+  <!-- 底部悬浮 CTA -->
+  <div id="cta-wrap" class="cta-fixed">
+    <button type="button" id="btn-cta" class="btn btn-primary btn-block" disabled>联系寄养</button>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/pages/host-detail.js"></script>
+</body>
+</html>

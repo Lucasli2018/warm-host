@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>找寄养人 - warm-host</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/cn-fontsource-noto-serif-sc-regular@1.0.0/index.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/cn-fontsource-noto-sans-sc-regular@1.0.0/index.css" rel="stylesheet">
+</head>
+<body>
+  <div class="header">
+    <a href="/index.html" class="header-back" title="返回首页">←</a>
+    <span class="header-title">找寄养人</span>
+    <span class="header-placeholder"></span>
+  </div>
+
+  <div class="container">
+
+    <!-- 筛选面板 -->
+    <div class="filter-panel card">
+      <div class="filter-header">
+        <h3>筛选</h3>
+        <button type="button" class="filter-toggle" id="filter-toggle">收起 ▴</button>
+      </div>
+      <div class="filter-body" id="filter-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>从</label>
+            <input type="date" id="f-from" aria-label="起始日期">
+          </div>
+          <div class="form-group">
+            <label>到</label>
+            <input type="date" id="f-to" aria-label="结束日期">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>区域</label>
+          <input type="text" id="f-district" placeholder="小区或街道，模糊匹配" maxlength="50">
+        </div>
+        <div class="form-group">
+          <label>品种</label>
+          <div class="chip-group" id="f-species-chips">
+            <button type="button" class="chip chip-cursor" data-key="species" data-value="猫">🐱 猫</button>
+            <button type="button" class="chip chip-cursor" data-key="species" data-value="狗">🐶 狗</button>
+            <button type="button" class="chip chip-cursor" data-key="species" data-value="兔">🐰 兔</button>
+            <button type="button" class="chip chip-cursor" data-key="species" data-value="其他">🐾 其他</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>体型</label>
+          <div class="chip-group" id="f-size-chips">
+            <button type="button" class="chip chip-cursor" data-key="size" data-value="小型">小型</button>
+            <button type="button" class="chip chip-cursor" data-key="size" data-value="中型">中型</button>
+            <button type="button" class="chip chip-cursor" data-key="size" data-value="大型">大型</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>排序</label>
+          <div class="chip-group" id="f-sort-chips">
+            <button type="button" class="chip chip-cursor" data-key="sort" data-value="rating">评分优先</button>
+            <button type="button" class="chip chip-cursor" data-key="sort" data-value="price">价格低到高</button>
+            <button type="button" class="chip chip-cursor" data-key="sort" data-value="reviews">评价数多</button>
+          </div>
+        </div>
+        <button type="button" id="btn-search" class="btn btn-primary btn-block">搜索</button>
+      </div>
+    </div>
+
+    <!-- 结果区 -->
+    <div class="result-count" id="result-count" style="display:none"></div>
+
+    <!-- 加载状态 -->
+    <div id="loading-state" class="empty-state" style="display:none">
+      <span class="emoji">⏳</span>
+      <h3>加载中…</h3>
+    </div>
+
+    <!-- 空状态 -->
+    <div id="empty-state" class="empty-state" style="display:none">
+      <span class="emoji">🐾</span>
+      <h3>没有找到符合条件的寄养人</h3>
+      <p>试试调整筛选条件</p>
+      <button type="button" class="btn btn-secondary" id="btn-clear-filter">清空筛选</button>
+    </div>
+
+    <!-- 卡片容器 -->
+    <div id="host-list"></div>
+
+    <!-- 加载更多 -->
+    <div id="load-more-wrap" style="display:none; margin-top: 16px;">
+      <button type="button" id="btn-load-more" class="btn btn-secondary btn-block">加载更多</button>
+    </div>
+
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/pages/hosts.js"></script>
+</body>
+</html>
