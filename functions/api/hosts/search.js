@@ -111,7 +111,12 @@ export async function onRequestGet({ request, env }) {
 
   // ---------- 构建 SQL ----------
   // 先构造 WHERE 条件片段，主查询与 count 查询共用
-  const whereParts = ["u.host_status = 'active'", "u.banned = 0"];
+  // 安全兜底：排除已确认黑名单目标 + banned 用户
+  const whereParts = [
+    "u.host_status = 'active'",
+    "u.banned = 0",
+    "u.id NOT IN (SELECT bl.target_user_id FROM blacklist bl WHERE bl.status = 'confirmed')",
+  ];
   const binds = [];
 
   if (hasDateRange) {

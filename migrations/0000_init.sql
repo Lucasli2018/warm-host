@@ -151,11 +151,14 @@ CREATE TABLE IF NOT EXISTS reviews (
 CREATE TABLE IF NOT EXISTS blacklist (
   id TEXT PRIMARY KEY,
   reporter_id TEXT NOT NULL,
-  reported_id TEXT NOT NULL,
-  reason TEXT,
-  evidence TEXT,
-  status TEXT DEFAULT 'active',
-  created_at TEXT NOT NULL
+  target_user_id TEXT NOT NULL,
+  target_type TEXT NOT NULL,
+  category TEXT NOT NULL,
+  details TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TEXT NOT NULL,
+  handled_at TEXT,
+  handled_by TEXT
 );
 
 -- ============================================================
@@ -222,6 +225,11 @@ CREATE INDEX IF NOT EXISTS idx_reviews_reviewee_created
   ON reviews(reviewee_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read
   ON notifications(user_id, read);
+CREATE INDEX IF NOT EXISTS idx_blacklist_status ON blacklist(status);
+CREATE INDEX IF NOT EXISTS idx_blacklist_reporter ON blacklist(reporter_id);
+CREATE INDEX IF NOT EXISTS idx_blacklist_target ON blacklist(target_user_id);
+CREATE INDEX IF NOT EXISTS idx_blacklist_reporter_target_status
+  ON blacklist(reporter_id, target_user_id, status);
 CREATE INDEX IF NOT EXISTS idx_invite_codes_owner
   ON invite_codes(owner_id);
 CREATE INDEX IF NOT EXISTS idx_invite_codes_used_by

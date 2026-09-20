@@ -102,6 +102,9 @@ export async function onRequestPost({ request, env }) {
   const user = await requireUser(request, env);
   if (!user) return fail("未登录或会话已过期", 401);
 
+  // 安全兜底：被禁用账号不可申请
+  if (user.banned) return fail("账号已被封禁", 403);
+
   // 已申请过（is_host=1 且 status 非 rejected/suspended）→ 拒绝重复申请
   if (user.isHost && (user.hostStatus === "pending" || user.hostStatus === "active")) {
     return fail("您已申请成为寄养人，请勿重复提交", 400);

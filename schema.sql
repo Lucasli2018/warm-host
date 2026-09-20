@@ -147,15 +147,21 @@ CREATE TABLE IF NOT EXISTS reviews (
 
 -- ============================================================
 -- 3.8 blacklist
+-- Task 13: 举报 + 管理员处理 + 安全兜底过滤
+-- status: pending → confirmed | dismissed（终态）
+-- category: 举报类别白名单
 -- ============================================================
 CREATE TABLE IF NOT EXISTS blacklist (
   id TEXT PRIMARY KEY,
   reporter_id TEXT NOT NULL,
-  reported_id TEXT NOT NULL,
-  reason TEXT,
-  evidence TEXT,
-  status TEXT DEFAULT 'active',         -- active/removed
-  created_at TEXT NOT NULL
+  target_user_id TEXT NOT NULL,
+  target_type TEXT NOT NULL,            -- 'owner' | 'host'
+  category TEXT NOT NULL,               -- 举报类别（白名单）
+  details TEXT NOT NULL,                -- 详细描述 ≤500
+  status TEXT NOT NULL DEFAULT 'pending', -- pending/confirmed/dismissed
+  created_at TEXT NOT NULL,
+  handled_at TEXT,
+  handled_by TEXT
 );
 
 -- ============================================================
@@ -232,6 +238,13 @@ CREATE INDEX IF NOT EXISTS idx_reviews_reviewee_created
 -- notifications
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read
   ON notifications(user_id, read);
+
+-- blacklist
+CREATE INDEX IF NOT EXISTS idx_blacklist_status ON blacklist(status);
+CREATE INDEX IF NOT EXISTS idx_blacklist_reporter ON blacklist(reporter_id);
+CREATE INDEX IF NOT EXISTS idx_blacklist_target ON blacklist(target_user_id);
+CREATE INDEX IF NOT EXISTS idx_blacklist_reporter_target_status
+  ON blacklist(reporter_id, target_user_id, status);
 
 -- invite_codes
 CREATE INDEX IF NOT EXISTS idx_invite_codes_owner

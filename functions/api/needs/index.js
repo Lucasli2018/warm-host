@@ -163,7 +163,7 @@ export async function onRequestGet({ request, env }) {
     "UPDATE needs SET status = 'expired', updated_at = ? WHERE status = 'open' AND created_at < ?"
   ).bind(now(), cutoff).run();
 
-  // 只返回 open 且 owner 未 ban 的
+  // 只返回 open 且 owner 未 ban 且 owner 非已确认黑名单目标
   const { results, meta } = await env.DB.prepare(
     `SELECT n.*,
             p.name AS pet_name, p.species AS pet_species, p.breed AS pet_breed,
@@ -172,7 +172,9 @@ export async function onRequestGet({ request, env }) {
      FROM needs n
      JOIN pets p ON n.pet_id = p.id
      JOIN users u ON n.owner_id = u.id
-     WHERE n.status = 'open' AND u.banned = 0
+     WHERE n.status = 'open'
+       AND u.banned = 0
+       AND u.id NOT IN (SELECT bl.target_user_id FROM blacklist bl WHERE bl.status = 'confirmed')
      ORDER BY n.created_at DESC
      LIMIT ? OFFSET ?`
   ).bind(...[pageSize, offset]).all();
@@ -181,7 +183,9 @@ export async function onRequestGet({ request, env }) {
     `SELECT COUNT(*) AS total
      FROM needs n
      JOIN users u ON n.owner_id = u.id
-     WHERE n.status = 'open' AND u.banned = 0`
+     WHERE n.status = 'open'
+       AND u.banned = 0
+       AND u.id NOT IN (SELECT bl.target_user_id FROM blacklist bl WHERE bl.status = 'confirmed')`
   ).first();
 
   return json({

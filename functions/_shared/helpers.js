@@ -84,6 +84,7 @@ export async function requireUser(request, env) {
     isHost: !!session.is_host,
     hostStatus: session.host_status,
     idCardVerified: !!session.id_card_verified,
+    banned: !!session.banned,
     city: session.city || "同城",
     bio: session.bio || "",
     avatarKey: session.avatar_key || null,

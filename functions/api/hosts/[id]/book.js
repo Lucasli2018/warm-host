@@ -17,6 +17,9 @@ export async function onRequestPost({ request, env, params }) {
   const user = await requireUser(request, env);
   if (!user) return fail("未登录", 401);
 
+  // 安全兜底：被禁用账号不可接单
+  if (user.banned) return fail("账号已被封禁", 403);
+
   if (!user.isHost) return fail("仅寄养人可接单", 403);
   if (user.hostStatus !== "active") return fail("寄养人审核通过后才可接单", 403);
 

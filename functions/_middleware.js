@@ -139,11 +139,14 @@ const SCHEMA_STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS blacklist (
     id TEXT PRIMARY KEY,
     reporter_id TEXT NOT NULL,
-    reported_id TEXT NOT NULL,
-    reason TEXT,
-    evidence TEXT,
-    status TEXT DEFAULT 'active',
-    created_at TEXT NOT NULL
+    target_user_id TEXT NOT NULL,
+    target_type TEXT NOT NULL,
+    category TEXT NOT NULL,
+    details TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at TEXT NOT NULL,
+    handled_at TEXT,
+    handled_by TEXT
   )`,
   // --- sponsors ---
   `CREATE TABLE IF NOT EXISTS sponsors (
@@ -187,6 +190,10 @@ const SCHEMA_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`,
   `CREATE INDEX IF NOT EXISTS idx_reviews_reviewee_created ON reviews(reviewee_id, created_at)`,
   `CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, read)`,
+  `CREATE INDEX IF NOT EXISTS idx_blacklist_status ON blacklist(status)`,
+  `CREATE INDEX IF NOT EXISTS idx_blacklist_reporter ON blacklist(reporter_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_blacklist_target ON blacklist(target_user_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_blacklist_reporter_target_status ON blacklist(reporter_id, target_user_id, status)`,
   `CREATE INDEX IF NOT EXISTS idx_invite_codes_owner ON invite_codes(owner_id)`,
   `CREATE INDEX IF NOT EXISTS idx_invite_codes_used_by ON invite_codes(used_by)`,
 ];
@@ -200,6 +207,8 @@ async function ensureDatabase(env) {
       "SELECT name FROM sqlite_master WHERE type='table' AND name='users'"
     ).first();
     if (result) {
+      // 用户表已存在（可能是老 schema）→ 运行 blacklist 迁移
+      await migrateBlacklistSchema(env.DB);
       dbReady = true;
       return;
     }
@@ -223,6 +232,43 @@ async function ensureDatabase(env) {
     console.error("[middleware] 数据库初始化失败:", err);
   } finally {
     initializing = false;
+  }
+}
+
+// ============ Blacklist 表迁移（Task 13）============
+// 检测 blacklist 表是否为老 schema（reported_id/reason/evidence/status='active'）
+// 若是，DROP 并用新 schema 重建（老表无数据，安全）
+// 新 schema: id, reporter_id, target_user_id, target_type, category, details,
+//            status('pending'/'confirmed'/'dismissed'), created_at, handled_at, handled_by
+async function migrateBlacklistSchema(db) {
+  try {
+    const cols = await db.prepare("PRAGMA table_info(blacklist)").all();
+    const names = (cols.results || []).map(r => r.name);
+    const isOldSchema = names.includes("reported_id") || names.includes("evidence");
+    if (!isOldSchema) return;
+    console.log("[middleware] 检测到 blacklist 老 schema，迁移中…");
+    await db.prepare("DROP TABLE IF EXISTS blacklist").run();
+    await db.prepare(
+      `CREATE TABLE blacklist (
+        id TEXT PRIMARY KEY,
+        reporter_id TEXT NOT NULL,
+        target_user_id TEXT NOT NULL,
+        target_type TEXT NOT NULL,
+        category TEXT NOT NULL,
+        details TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TEXT NOT NULL,
+        handled_at TEXT,
+        handled_by TEXT
+      )`
+    ).run();
+    await db.prepare("CREATE INDEX IF NOT EXISTS idx_blacklist_status ON blacklist(status)").run();
+    await db.prepare("CREATE INDEX IF NOT EXISTS idx_blacklist_reporter ON blacklist(reporter_id)").run();
+    await db.prepare("CREATE INDEX IF NOT EXISTS idx_blacklist_target ON blacklist(target_user_id)").run();
+    await db.prepare("CREATE INDEX IF NOT EXISTS idx_blacklist_reporter_target_status ON blacklist(reporter_id, target_user_id, status)").run();
+    console.log("[middleware] blacklist 表迁移完成");
+  } catch (e) {
+    console.error("[middleware] blacklist 迁移失败:", e);
   }
 }
 
