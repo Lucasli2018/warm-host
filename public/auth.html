@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>登录 / 注册 - warm-host</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/cn-fontsource-noto-serif-sc-regular@1.0.0/index.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/cn-fontsource-noto-sans-sc-regular@1.0.0/index.css" rel="stylesheet">
+</head>
+<body>
+  <div class="auth-container">
+    <!-- Logo -->
+    <div class="auth-logo">
+      <span class="logo-icon">🐾</span>
+      <h1>warm-host</h1>
+      <p>把宠物寄给可信的人</p>
+    </div>
+
+    <!-- 登录 / 注册 Tab -->
+    <div class="auth-tabs">
+      <button type="button" class="tab-btn active" data-tab="login">登录</button>
+      <button type="button" class="tab-btn" data-tab="register">注册</button>
+    </div>
+
+    <!-- 登录表单 -->
+    <form id="login-form" class="auth-form active" novalidate>
+      <div class="form-group">
+        <label for="login-phone">手机号</label>
+        <input type="tel" id="login-phone" name="phone" placeholder="请输入手机号" required maxlength="20" autocomplete="tel">
+      </div>
+      <div class="form-group">
+        <label for="login-password">密码</label>
+        <input type="password" id="login-password" name="password" placeholder="请输入密码" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">登 录</button>
+    </form>
+
+    <!-- 注册表单 -->
+    <form id="register-form" class="auth-form" novalidate>
+      <div class="form-group">
+        <label for="reg-phone">手机号</label>
+        <input type="tel" id="reg-phone" name="phone" placeholder="请输入手机号" required maxlength="20" autocomplete="tel">
+      </div>
+      <div class="form-group">
+        <label for="reg-nickname">昵称</label>
+        <input type="text" id="reg-nickname" name="nickname" placeholder="给自己起个名字" required maxlength="20" autocomplete="nickname">
+      </div>
+      <div class="form-group">
+        <label for="reg-password">密码</label>
+        <input type="password" id="reg-password" name="password" placeholder="至少 6 位" required minlength="6" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label for="reg-invite">邀请码 <span class="hint">（必填，6 位）</span></label>
+        <input type="text" id="reg-invite" name="inviteCode" placeholder="XXXXXX" required maxlength="6" class="invite-input" autocomplete="off" spellcheck="false">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">注册</button>
+    </form>
+
+    <p class="auth-tip">
+      没有邀请码？<br>
+      联系社群管理员获取，或从已注册用户处索取
+    </p>
+
+    <div class="auth-footer">
+      warm-host · 同城宠物寄养匹配
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/pages/auth.js"></script>
+</body>
+</html>

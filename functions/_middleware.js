@@ -293,6 +293,9 @@ export async function onRequest(context) {
   }
 
   // 3. Session 注入（仅 /api/* 路径）
+  // 注：Pages Functions 的 context.next() 不跨层级共享 request/user 属性，
+  //     handler 需自行调用 requireUser() 检查 session
+  //     此处注入仅供日志和调试参考，不依赖
   if (url.pathname.startsWith("/api/")) {
     try {
       const user = await resolveUser(request, env);

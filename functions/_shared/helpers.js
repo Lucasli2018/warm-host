@@ -55,3 +55,39 @@ export function getInt(params, key, fallback = 0) {
   const v = Number(params[key]);
   return Number.isFinite(v) ? v : fallback;
 }
+
+// ============ Session 解析（供 handler 直接调用） ============
+// 从 request 提取 Bearer token → 查 sessions 表 → 返回用户信息
+// 返回 null 表示未登录或会话过期
+export async function requireUser(request, env) {
+  const auth = request.headers.get("Authorization");
+  if (!auth || !auth.startsWith("Bearer ")) return null;
+
+  const token = auth.slice(7);
+  const session = await env.DB.prepare(
+    `SELECT s.token, s.user_id, s.expires_at, u.*
+     FROM sessions s
+     JOIN users u ON s.user_id = u.id
+     WHERE s.token = ?`
+  ).bind(token).first();
+
+  if (!session) return null;
+  if (new Date(session.expires_at) < new Date()) return null;
+
+  // 返回用户信息（不暴露密码等敏感字段）
+  return {
+    id: session.id,
+    phone: session.phone,
+    nickname: session.nickname,
+    role: session.role,
+    isOwner: !!session.is_owner,
+    isHost: !!session.is_host,
+    hostStatus: session.host_status,
+    idCardVerified: !!session.id_card_verified,
+    city: session.city || "同城",
+    bio: session.bio || "",
+    avatarKey: session.avatar_key || null,
+    invitedBy: session.invited_by || null,
+    createdAt: session.created_at,
+  };
+}
