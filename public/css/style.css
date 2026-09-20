@@ -2548,3 +2548,464 @@ textarea {
     top: 54px;
   }
 }
+
+/* ============================================================
+   Task 15 — 底部 Tab 导航 + 首页 index.html 样式
+   ============================================================ */
+
+/* ---- 底部 Tab 导航 ---- */
+.bottom-tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--tabbar-height);
+  background: var(--color-card);
+  border-top: 1px solid var(--color-border-strong);
+  display: flex;
+  padding: 0 4px;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 200;
+  box-shadow: 0 -2px 12px rgba(139, 94, 60, 0.08);
+}
+
+.bottom-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 500;
+  transition: color 0.15s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-tab:active {
+  transform: scale(0.95);
+}
+
+.bottom-tab.active {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.bottom-tab.active .bottom-tab-icon {
+  transform: translateY(-1px);
+}
+
+.bottom-tab-icon {
+  font-size: 22px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.bottom-tab-label {
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+/* body 加底部留白，避免内容被底部栏遮挡 */
+body.has-bottom-tabbar {
+  padding-bottom: calc(var(--tabbar-height) + 16px + env(safe-area-inset-bottom));
+}
+
+/* .page-with-tabbar 已经自带底部 padding，避免重复 */
+body.has-bottom-tabbar .page-with-tabbar {
+  padding-bottom: 20px;
+}
+
+/* host-detail 的固定 CTA 按钮上移到 Tab 栏之上 */
+body.has-bottom-tabbar .cta-fixed {
+  bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+}
+
+/* ---- 首页：品牌栏 ---- */
+.home-brand {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(251, 245, 238, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.home-brand-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.home-brand-logo {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.home-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.home-brand-name {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.home-brand-slogan {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-brand-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-login-btn {
+  min-height: 34px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.home-logout-btn {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.home-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* ---- 首页：Hero ---- */
+.home-hero {
+  padding: 28px 20px 22px;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(232, 132, 92, 0.10) 0%, rgba(139, 94, 60, 0.06) 100%);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.home-hero-title {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1.25;
+  margin-bottom: 10px;
+}
+
+.home-hero-sub {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-bottom: 18px;
+}
+
+.home-cta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.home-cta .btn {
+  font-size: 15px;
+}
+
+/* ---- 首页：搜索栏 ---- */
+.home-search {
+  margin: 16px 16px 0;
+  padding: 16px;
+}
+
+.home-search-title {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  color: var(--color-primary);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.home-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.home-search-row input[type="date"] {
+  flex: 1;
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.home-search-sep {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.home-search input[type="text"] {
+  margin-bottom: 10px;
+  min-height: 40px;
+  font-size: 14px;
+}
+
+.home-search .btn {
+  min-height: 44px;
+  font-size: 15px;
+}
+
+/* ---- 首页：数据看板 ---- */
+.home-stats {
+  margin: 16px;
+  padding: 16px;
+}
+
+.home-stats-title {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  color: var(--color-primary);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.home-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.home-stat-item {
+  text-align: center;
+  padding: 10px 4px;
+  background: var(--color-bg-cream);
+  border-radius: 10px;
+}
+
+.home-stat-num {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1.2;
+}
+
+.home-stat-label {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.home-stat-highlight {
+  background: rgba(232, 132, 92, 0.10);
+}
+
+.home-stat-highlight .home-stat-num {
+  color: var(--color-cta-dark);
+}
+
+/* ---- 首页：通用 section 标题 ---- */
+.home-section-title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 20px 16px 12px;
+}
+
+/* ---- 首页：价值主张三卡片 ---- */
+.home-value-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  padding: 0 16px;
+}
+
+.home-value-card {
+  padding: 14px 16px;
+}
+
+.home-value-icon {
+  font-size: 28px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.home-value-title {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  color: var(--color-primary);
+  margin-bottom: 4px;
+}
+
+.home-value-desc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* ---- 首页：如何运作 ---- */
+.home-steps {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.home-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 12px 14px;
+  box-shadow: var(--shadow-card);
+}
+
+.home-step-idx {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.home-step-body h3 {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  color: var(--color-primary);
+  margin-bottom: 2px;
+}
+
+.home-step-body p {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* ---- 首页：信任机制四件套 ---- */
+.home-trust {
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.home-trust-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  background: var(--color-bg-cream);
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+}
+
+.home-trust-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.home-trust-label {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.home-trust-desc {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+/* ---- 首页：页脚 ---- */
+.home-footer {
+  margin-top: 24px;
+  padding: 20px 16px 12px;
+  text-align: center;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-page-top);
+}
+
+.home-footer-brand {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--color-primary);
+  margin-bottom: 4px;
+}
+
+.home-footer-meta {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* ---- 桌面端布局微调 ---- */
+@media (min-width: 769px) {
+  .home-hero-title { font-size: 32px; }
+  .home-value-cards {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+  .home-steps {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .home-trust {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 16px;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .home-stats {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 16px;
+  }
+  .home-search {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 16px;
+  }
+}

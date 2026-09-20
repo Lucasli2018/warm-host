@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>暖木家 · 让每一次寄养都有温度</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/cn-fontsource-noto-serif-sc-regular@1.0.0/index.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/cn-fontsource-noto-sans-sc-regular@1.0.0/index.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- 顶部品牌栏 -->
+  <header class="home-brand">
+    <div class="home-brand-left">
+      <span class="home-brand-logo">🏡</span>
+      <div class="home-brand-text">
+        <div class="home-brand-name">暖木家</div>
+        <div class="home-brand-slogan">让每一次寄养都有温度</div>
+      </div>
+    </div>
+    <div class="home-brand-right" id="brand-auth-slot">
+      <button type="button" id="btn-login" class="btn btn-secondary home-login-btn">登录</button>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="home-hero">
+    <h1 class="home-hero-title">给毛孩子<br>找一个温暖的家</h1>
+    <p class="home-hero-sub">实名认证 · 首单担保 · 真实评价</p>
+    <div class="home-cta">
+      <a href="/hosts.html" class="btn btn-primary btn-block">找寄养人</a>
+      <a href="/my.html?tab=needs" id="home-cta-need" class="btn btn-secondary btn-block">我要寄养</a>
+    </div>
+  </section>
+
+  <!-- 搜索栏 -->
+  <section class="home-search card">
+    <div class="home-search-title">按日期与区域找寄养人</div>
+    <div class="home-search-row">
+      <input type="date" id="search-from" aria-label="起始日期">
+      <span class="home-search-sep">至</span>
+      <input type="date" id="search-to" aria-label="结束日期">
+    </div>
+    <input type="text" id="search-area" placeholder="期望区域（选填，如：朝阳区）" maxlength="30">
+    <button type="button" id="btn-search" class="btn btn-primary btn-block">找寄养人</button>
+  </section>
+
+  <!-- 数据看板 -->
+  <section class="home-stats card">
+    <div class="home-stats-title">社区数据</div>
+    <div class="home-stats-grid">
+      <div class="home-stat-item">
+        <div class="home-stat-num" id="stat-hosts">—</div>
+        <div class="home-stat-label">已认证寄养人</div>
+      </div>
+      <div class="home-stat-item">
+        <div class="home-stat-num" id="stat-pets">—</div>
+        <div class="home-stat-label">已登记宠物</div>
+      </div>
+      <div class="home-stat-item">
+        <div class="home-stat-num" id="stat-needs">—</div>
+        <div class="home-stat-label">正在寻找</div>
+      </div>
+      <div class="home-stat-item">
+        <div class="home-stat-num" id="stat-orders">—</div>
+        <div class="home-stat-label">完成寄养</div>
+      </div>
+      <div class="home-stat-item">
+        <div class="home-stat-num" id="stat-reviews">—</div>
+        <div class="home-stat-label">真实评价</div>
+      </div>
+      <div class="home-stat-item home-stat-highlight">
+        <div class="home-stat-num" id="stat-today">—</div>
+        <div class="home-stat-label">今日新单</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 价值主张三卡片 -->
+  <section class="home-value-cards">
+    <div class="home-value-card card">
+      <div class="home-value-icon">🛡️</div>
+      <h3 class="home-value-title">实名审核</h3>
+      <p class="home-value-desc">身份证 + 人脸识别双重核验，寄养人通过后才可接单。</p>
+    </div>
+    <div class="home-value-card card">
+      <div class="home-value-icon">⭐</div>
+      <h3 class="home-value-title">真实评价</h3>
+      <p class="home-value-desc">每笔订单完成后双向评价，评分公开可查，杜绝刷单。</p>
+    </div>
+    <div class="home-value-card card">
+      <div class="home-value-icon">🤝</div>
+      <h3 class="home-value-title">首单担保</h3>
+      <p class="home-value-desc">首次接单需邀请担保人信誉背书，保障双方安全。</p>
+    </div>
+  </section>
+
+  <!-- 如何运作 -->
+  <section class="home-steps">
+    <h2 class="home-section-title">如何运作</h2>
+    <div class="home-step">
+      <div class="home-step-idx">1</div>
+      <div class="home-step-body">
+        <h3>发布需求</h3>
+        <p>填写宠物信息、日期区间与期望区域，一分钟搞定。</p>
+      </div>
+    </div>
+    <div class="home-step">
+      <div class="home-step-idx">2</div>
+      <div class="home-step-body">
+        <h3>选择寄养人</h3>
+        <p>浏览认证寄养人档案，看评分、看评价、看价格，放心下单。</p>
+      </div>
+    </div>
+    <div class="home-step">
+      <div class="home-step-idx">3</div>
+      <div class="home-step-body">
+        <h3>安心寄养</h3>
+        <p>订单进度透明可追，全程可申诉，完成后可双向评价。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 信任机制四件套 -->
+  <section class="home-trust">
+    <h2 class="home-section-title">为什么可以信任我们</h2>
+    <div class="home-trust-item">
+      <span class="home-trust-icon">🪪</span>
+      <span class="home-trust-label">实名审核</span>
+      <span class="home-trust-desc">身份证 + 人脸识别，管理员人工复核。</span>
+    </div>
+    <div class="home-trust-item">
+      <span class="home-trust-icon">🤝</span>
+      <span class="home-trust-label">首单担保</span>
+      <span class="home-trust-desc">首次接单需担保人信誉背书。</span>
+    </div>
+    <div class="home-trust-item">
+      <span class="home-trust-icon">⭐</span>
+      <span class="home-trust-label">真实评价</span>
+      <span class="home-trust-desc">订单完成后双向评分，公开可查。</span>
+    </div>
+    <div class="home-trust-item">
+      <span class="home-trust-icon">🚫</span>
+      <span class="home-trust-label">黑名单公示</span>
+      <span class="home-trust-desc">违规账号公开拉黑，用户自主规避风险。</span>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="home-footer">
+    <div class="home-footer-brand">🏡 暖木家 · 让每一次寄养都有温度</div>
+    <div class="home-footer-meta">MVP 测试版 · 2026 © warm-host</div>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/notifications.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/pages/index.js"></script>
+</body>
+</html>

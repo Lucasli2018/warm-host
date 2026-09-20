@@ -1789,18 +1789,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   await refreshPetsCache();
   await loadNeeds();
 
-  // ============ URL 参数 (?tab=orders & role=host) ============
+  // ============ URL 参数 (?tab=... & role=host) ============
+  // 支持 tab: pets / needs / orders / host / profile
+  //   profile 是底部 Tab 栏「我的」入口，my.html 无对应 tab，落到 pets 默认
+  const VALID_MY_TABS = ['pets', 'needs', 'orders', 'host'];
+  function applyUrlParams(tabParam, roleParam) {
+    let tabName = tabParam;
+    if (tabName === 'profile' || !VALID_MY_TABS.includes(tabName)) {
+      tabName = 'pets';
+    }
+    activateTab(tabName);
+    // 保持原逻辑：任何情况下都初始化 role
+    setRole(roleParam === 'host' ? 'host' : 'owner');
+  }
   try {
     const params = new URLSearchParams(location.search);
-    const initRole = params.get('role') === 'host' ? 'host' : 'owner';
-    if (params.get('tab') === 'orders') {
-      activateTab('orders');
-      setRole(initRole);
-    } else {
-      // 默认 owner 角色，但不主动加载（避免无用请求）
-      setRole(initRole);
-    }
+    applyUrlParams(params.get('tab'), params.get('role'));
   } catch (err) {
     // URL 解析失败静默
   }
+
+  // ============ 全局 tabchange 事件（由 /js/app.js 底部 Tab 栏派发） ============
+  // 底部 Tab 点击 my.html 内部不同 tab 时，只更新 ?tab= 并派发此事件
+  window.addEventListener('tabchange', (e) => {
+    const detail = e && e.detail;
+    const tab = detail && detail.tab;
+    if (!tab) return;
+    applyUrlParams(tab, 'owner');
+  });
 });

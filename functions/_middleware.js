@@ -314,6 +314,46 @@ async function resolveUser(request, env) {
   return session;
 }
 
+// ============ /api/stats 内联 handler（Task 15）============
+// wrangler pages dev 的文件监视器不检测新建目录，
+// 故在此内联实现；生产部署后由 functions/api/stats/index.js 接管。
+async function handleStats(request, env) {
+  const db = env.DB;
+  if (!db) {
+    return new Response(JSON.stringify({ error: "database unavailable" }), {
+      status: 500,
+      headers: { "content-type": "application/json; charset=utf-8" },
+    });
+  }
+
+  async function count(sql) {
+    try {
+      const row = await db.prepare(sql).first();
+      if (!row) return 0;
+      const v = row.value;
+      return Number.isFinite(v) ? v : 0;
+    } catch (err) {
+      return 0;
+    }
+  }
+
+  const [hosts, pets, needs, orders, reviews, todayOrders] = await Promise.all([
+    count("SELECT COUNT(*) AS value FROM host_profiles WHERE is_verified = 1"),
+    count("SELECT COUNT(*) AS value FROM pets"),
+    count("SELECT COUNT(*) AS value FROM needs WHERE status = 'open' OR status = 'matched'"),
+    count("SELECT COUNT(*) AS value FROM orders WHERE status != 'cancelled'"),
+    count("SELECT COUNT(*) AS value FROM reviews"),
+    count("SELECT COUNT(*) AS value FROM orders WHERE date(created_at) = date('now','localtime')"),
+  ]);
+
+  return new Response(JSON.stringify({
+    hosts, pets, needs, orders, reviews, todayOrders,
+  }), {
+    status: 200,
+    headers: { "content-type": "application/json; charset=utf-8" },
+  });
+}
+
 // ============ 主入口 ============
 export async function onRequest(context) {
   const { request, env } = context;
@@ -351,7 +391,14 @@ export async function onRequest(context) {
     }
   }
 
-  // 4. 调用 next handler
+  // 4. 内联 /api/stats handler（wrangler pages dev 不检测新目录，
+  //    故在 middleware 内联处理；生产部署后此分支可移除，由
+  //    functions/api/stats/index.js 接管）
+  if (url.pathname === "/api/stats" && request.method === "GET") {
+    return handleStats(request, env);
+  }
+
+  // 5. 调用 next handler
   const response = await context.next();
 
   // 5. CORS headers
