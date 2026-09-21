@@ -409,8 +409,8 @@ async function main() {
   const pub12 = await req('GET', '/api/needs');
   ok('默认 pageSize=12', pub12.data?.pageSize === 12);
   ok('total >= 2（2 新需求均为 open）', pub12.data?.total >= 2);
-  ok('total 精确 = needs 长度 + 已被分页隐藏的（此处 pageSize=12 应全部返回）',
-    pub12.data?.needs?.length === pub12.data?.total);
+  ok('total 与分页一致：needs 长度 = min(total, pageSize)',
+    pub12.data?.needs?.length === Math.min(pub12.data?.total, 12));
 
   // 验证 total 计算正确：拉全部后统计 open 且非 ban
   const page1 = await req('GET', '/api/needs?page=1&pageSize=5');

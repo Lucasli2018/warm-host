@@ -401,7 +401,23 @@ export async function onRequest(context) {
   // 5. 调用 next handler
   const response = await context.next();
 
-  // 5. CORS headers
+  // 5.1 未知 /api/* 路径兜底：Pages 静态层会把未命中路由回退成 index.html(200)，
+  //     这里统一转成 JSON 404，避免 API 客户端误收 HTML
+  if (url.pathname.startsWith("/api/")) {
+    const ct = response.headers.get("content-type") || "";
+    if (ct.includes("text/html")) {
+      const json404 = new Response(JSON.stringify({ error: "接口不存在" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+      });
+      json404.headers.set("Access-Control-Allow-Origin", origin);
+      json404.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+      json404.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      return json404;
+    }
+  }
+
+  // 6. CORS headers
   response.headers.set("Access-Control-Allow-Origin", origin);
   response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");

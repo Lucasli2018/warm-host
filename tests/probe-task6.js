@@ -241,7 +241,9 @@ async function main() {
   ok('page=1', usersAll.data?.page === 1);
   ok('users 非空', (usersAll.data?.users || []).length > 0);
 
-  const adminInUsers = usersAll.data?.users?.find(u => u.id === adminId);
+  // admin 是最早注册的用户，按 created_at DESC 排在末页；用 q=admin 搜索定位
+  const usersAdmin = await req('GET', '/api/admin/users?q=admin', { headers: H_ADMIN });
+  const adminInUsers = usersAdmin.data?.users?.find(u => u.id === adminId);
   ok('列表含 admin', !!adminInUsers);
   if (adminInUsers) {
     ok('admin.role=admin', adminInUsers.role === 'admin');

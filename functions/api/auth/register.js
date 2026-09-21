@@ -69,8 +69,10 @@ function isValidInviteCode(code) {
 
 // ============ 主入口 ============
 export async function onRequestPost({ request, env }) {
+  // 本地开发/测试可用 --var DISABLE_RATE_LIMIT:1 关闭限流（生产不设该变量）
+  const rlEnabled = env.DISABLE_RATE_LIMIT !== "1";
   const rlKey = rateLimitKey(request);
-  if (!checkRateLimit(rlKey)) {
+  if (rlEnabled && !checkRateLimit(rlKey)) {
     return fail("尝试次数过多，请 15 分钟后重试", 429);
   }
 
