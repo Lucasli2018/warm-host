@@ -17,6 +17,7 @@
     order_completed:    '🎉',
     order_cancelled:    '🚫',
     order_disputed:     '⚠️',
+    order_invite:       '💌',
     review:             '⭐',
     sponsor_invite:     '🤝',
     sponsor_accepted:   '🛡️',

@@ -8,7 +8,7 @@
 //   🏠 首页    → /index.html
 //   🔍 寄养人  → /hosts.html
 //   🐾 宠物    → /my.html?tab=pets     （需登录）
-//   📋 需求    → /my.html?tab=needs     （需登录）
+//   📋 需求    → /needs.html           （需求广场，公开）
 //   👤 我的    → /my.html?tab=profile   （需登录）
 //
 // 行为：
@@ -29,7 +29,7 @@
     { key: 'home',   icon: '🏠', label: '首页',   href: '/index.html',   requiresAuth: false },
     { key: 'hosts',  icon: '🔍', label: '寄养人', href: '/hosts.html',   requiresAuth: false },
     { key: 'pets',   icon: '🐾', label: '宠物',   href: '/my.html?tab=pets',   requiresAuth: true  },
-    { key: 'needs',  icon: '📋', label: '需求',   href: '/my.html?tab=needs',  requiresAuth: true  },
+    { key: 'needs',  icon: '📋', label: '需求',   href: '/needs.html',      requiresAuth: false },
     { key: 'profile',icon: '👤', label: '我的',   href: '/my.html?tab=profile', requiresAuth: true  },
   ];
 
@@ -150,6 +150,7 @@
 
     if (path === '/index.html') return 'home';
     if (path === '/hosts.html') return 'hosts';
+    if (path === '/needs.html') return 'needs';
     if (path === '/my.html') {
       if (tab === 'pets' || tab === 'needs' || tab === 'profile' || tab === 'orders' || tab === 'host') {
         // orders/host 也属于 my 页；这里 profile 是"我的"入口的默认（等价于 pets 高亮更合理？

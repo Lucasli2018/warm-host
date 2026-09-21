@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>需求广场 · 等待接单 - warm-host</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/cn-fontsource-noto-serif-sc-regular@1.0.0/index.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/cn-fontsource-noto-sans-sc-regular@1.0.0/index.css" rel="stylesheet">
+</head>
+<body>
+  <div class="header">
+    <a href="/hosts.html" class="header-back" title="返回列表">←</a>
+    <span class="header-title">需求广场 · 等待接单</span>
+    <span class="header-placeholder"></span>
+  </div>
+
+  <div class="container">
+
+    <!-- 顶部说明卡 -->
+    <div class="needs-banner card">
+      <div class="needs-banner-icon">🐾</div>
+      <div class="needs-banner-body">
+        <div class="needs-banner-title">正在等待寄养人接单</div>
+        <div class="needs-banner-desc">主人发布的需求在此公开展示，您作为寄养人可直接接单。</div>
+      </div>
+    </div>
+
+    <!-- 加载状态 -->
+    <div id="loading-state" class="empty-state">
+      <span class="emoji">⏳</span>
+      <h3>加载中…</h3>
+    </div>
+
+    <!-- 空状态 -->
+    <div id="empty-state" class="empty-state" style="display:none">
+      <span class="emoji">🌙</span>
+      <h3>暂无待接单需求</h3>
+      <p>主人发布的新需求会第一时间出现在这里</p>
+      <a class="btn btn-secondary" href="/hosts.html">去浏览寄养人</a>
+    </div>
+
+    <!-- 结果计数 -->
+    <div class="needs-result-count" id="result-count" style="display:none"></div>
+
+    <!-- 卡片容器 -->
+    <div id="needs-list"></div>
+
+    <!-- 加载更多 -->
+    <div id="load-more-wrap" style="display:none; margin-top: 16px;">
+      <button type="button" id="btn-load-more" class="btn btn-secondary btn-block">加载更多</button>
+    </div>
+
+  </div>
+
+  <!-- 二次确认弹窗（接单） -->
+  <div id="book-confirm-modal" class="modal">
+    <div class="modal-mask"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>确认接单</h3>
+        <button type="button" class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body">
+        <p id="book-confirm-text" class="needs-confirm-text"></p>
+        <div class="needs-confirm-warn">
+          <span>⚠️</span>
+          <div>
+            <div>· 首单需要担保人背书</div>
+            <div>· 接单后请与主人确认日期与费用</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close>取消</button>
+        <button type="button" id="btn-book-confirm" class="btn btn-primary">确认接单</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/notifications.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/pages/needs.js"></script>
+</body>
+</html>

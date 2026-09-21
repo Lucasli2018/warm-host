@@ -3303,3 +3303,286 @@ body.has-bottom-tabbar .cta-fixed {
   border-color: var(--color-cta);
   color: #fff;
 }
+/* ============ Task 18 · 需求广场 + 邀请接单 ============ */
+
+/* 需求广场顶部说明卡 */
+.needs-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(232, 168, 56, 0.08), rgba(232, 168, 56, 0.02));
+  border: 1px solid rgba(232, 168, 56, 0.25);
+}
+.needs-banner-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+.needs-banner-body {
+  flex: 1;
+  min-width: 0;
+}
+.needs-banner-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.needs-banner-desc {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* 需求广场卡片容器 */
+#needs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* 结果计数 */
+.needs-result-count {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 12px 4px;
+}
+
+/* 需求卡片（广场版） */
+.need-square-card {
+  transition: all 0.25s ease;
+}
+.need-square-card.need-card-highlight {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.25), 0 6px 20px rgba(139, 94, 60, 0.15);
+  animation: needHighlightPulse 1.5s ease-out 2;
+}
+@keyframes needHighlightPulse {
+  0%   { box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.4), 0 0 0 0 rgba(139, 94, 60, 0.3); }
+  70%  { box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.25), 0 0 0 12px rgba(139, 94, 60, 0); }
+  100% { box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.25), 0 0 0 0 rgba(139, 94, 60, 0); }
+}
+.need-square-card.need-card-done {
+  opacity: 0.7;
+  background: var(--color-bg-cream);
+}
+
+/* 头像包裹 */
+.need-pet-avatar-wrap {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* 描述预览 */
+.need-desc-preview {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  padding: 8px 10px;
+  background: var(--color-bg-page-top);
+  border-radius: 8px;
+  margin-top: 6px;
+  border-left: 3px solid var(--color-primary);
+}
+
+/* 发布时间提示 */
+.need-time-hint {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  padding-top: 4px;
+  border-top: 1px dashed var(--color-border);
+}
+
+/* 我的需求标签 */
+.need-own-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  background: var(--color-bg-cream);
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  width: 100%;
+  justify-content: center;
+}
+
+/* 已接单标签 */
+.need-done-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #4F7040;
+  background: rgba(107, 142, 90, 0.15);
+  border: 1px solid rgba(107, 142, 90, 0.35);
+  border-radius: 999px;
+  font-weight: 600;
+  width: 100%;
+  justify-content: center;
+}
+
+/* 弹窗底部按钮区 */
+.modal-footer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-page-top);
+}
+.modal-footer .btn {
+  flex: 1;
+}
+
+/* 接单确认文案 */
+.needs-confirm-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text);
+  margin: 0 0 12px 0;
+  padding: 12px 14px;
+  background: var(--color-bg-cream);
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+}
+.needs-confirm-warn {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  padding: 10px 12px;
+  background: rgba(232, 168, 56, 0.08);
+  border-radius: 8px;
+  border: 1px solid rgba(232, 168, 56, 0.25);
+  line-height: 1.6;
+}
+.needs-confirm-warn > span {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* ============ hosts.html 顶部 segment ============ */
+.hosts-top-segment {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  background: var(--color-bg-cream);
+  padding: 4px;
+  border-radius: var(--radius-button);
+  border: 1px solid var(--color-border);
+}
+.seg-btn-large {
+  flex: 1;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+.seg-btn-large-active {
+  background: var(--color-card);
+  color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(139, 94, 60, 0.15);
+  font-weight: 600;
+}
+.seg-btn-large:hover:not(.seg-btn-large-active) {
+  color: var(--color-primary);
+  background: rgba(139, 94, 60, 0.05);
+}
+
+/* ============ index.html 寄养人接单入口卡 ============ */
+.home-entry-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 20px auto;
+  max-width: 640px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(139, 94, 60, 0.06), rgba(232, 168, 56, 0.04));
+  border: 1px solid rgba(139, 94, 60, 0.2);
+}
+.home-entry-icon {
+  font-size: 30px;
+  flex-shrink: 0;
+}
+.home-entry-body {
+  flex: 1;
+  min-width: 0;
+}
+.home-entry-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.home-entry-desc {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  line-height: 1.5;
+}
+.home-entry-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  height: auto;
+  font-size: 13px;
+}
+
+/* ============ host-detail 邀请需求选择器 ============ */
+.invite-need-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.invite-need-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--color-bg-cream);
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.invite-need-item:hover {
+  border-color: var(--color-primary);
+  background: rgba(139, 94, 60, 0.04);
+  transform: translateX(2px);
+}
+.invite-need-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+}
+.invite-need-body {
+  flex: 1;
+  min-width: 0;
+}
+.invite-need-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.invite-need-dates {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.invite-need-arrow {
+  font-size: 20px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}

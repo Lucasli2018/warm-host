@@ -262,16 +262,15 @@
     }
 
     document.getElementById('btn-reviews-more').addEventListener('click', loadMoreReviews);
-    document.getElementById('btn-cta').addEventListener('click', () => {
-      showToast('下单功能即将开放', 'info');
-    });
 
     // 并行加载详情 + 评价
+    let detailRes;
     try {
-      const [detailRes, reviewsRes] = await Promise.all([
+      const [detRes, reviewsRes] = await Promise.all([
         ApiClient.get(`/hosts/${encodeURIComponent(state.hostId)}`),
         ApiClient.get(`/hosts/${encodeURIComponent(state.hostId)}/reviews?page=1&pageSize=${REVIEWS_PAGE_SIZE}`),
       ]);
+      detailRes = detRes;
       if (!detailRes || !detailRes.host) throw new Error('not found');
       showDetail(detailRes.host, detailRes.availability || [], reviewsRes || {});
     } catch (err) {
@@ -282,6 +281,133 @@
         showNotFound();
       }
     }
+
+    // CTA 逻辑：根据登录态 / 是否自己的主页 / 是否有 open 需求 分支
+    wireCta(detailRes && detailRes.host);
+  }
+
+  // ---------- CTA：主人邀请寄养人接单 ----------
+  async function wireCta(host) {
+    const btn = document.getElementById('btn-cta');
+    if (!btn) return;
+
+    // 按钮文案保持「寄养 TA」
+    btn.textContent = '寄养 TA';
+    btn.disabled = false;
+
+    btn.addEventListener('click', async function () {
+      // 1. 未登录 → 跳登录
+      if (!ApiClient.isAuthed()) {
+        location.href = '/auth.html?next=' + encodeURIComponent(location.pathname + location.search);
+        return;
+      }
+
+      // 2. 判断是否自己的主页
+      let me = null;
+      try {
+        const r = await ApiClient.get('/auth/me');
+        me = r.user || r || null;
+      } catch (_) { /* 401 由 api.js 处理 */ }
+      if (!me || !me.id) return;
+
+      if (host && host.userId === me.id) {
+        btn.disabled = true;
+        btn.textContent = '这是您的主页';
+        showToast('这是您自己的主页', 'info');
+        return;
+      }
+
+      // 3. 查我的 open 需求
+      let myNeeds = [];
+      try {
+        const r = await ApiClient.get('/needs/my');
+        myNeeds = Array.isArray(r) ? r : (r && r.needs) || [];
+      } catch (e) {
+        showToast(e.message || '加载需求失败', 'error');
+        return;
+      }
+      const openNeeds = myNeeds.filter(n => n.status === 'open');
+
+      if (openNeeds.length === 0) {
+        // 无 open 需求 → 引导发布
+        if (confirm('您还没有进行中的寄养需求，先发布一条？')) {
+          location.href = '/my.html?tab=needs';
+        }
+        return;
+      }
+
+      // 4. 弹出需求选择列表
+      const selected = openNeeds.length === 1
+        ? openNeeds[0]
+        : openNeeds.length === 0
+          ? null
+          : await showNeedPicker(openNeeds);
+      if (!selected) return;
+
+      // 5. 二次确认 → POST /api/hosts/<hostId>/invite {needId}
+      const petName = (selected.pet && selected.pet.name) || '宠物';
+      const confirmMsg = `邀请 ${host.nickname || '寄养人'} 接单「${petName}」\n${selected.start_date} 至 ${selected.end_date}？`;
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        await ApiClient.post(`/hosts/${encodeURIComponent(state.hostId)}/invite`, { needId: selected.id });
+        showToast('已通知寄养人，等待接单', 'success');
+      } catch (e) {
+        const msg = (e && e.message) || '邀请失败';
+        // 429 后端返回「24 小时内已邀请过，请耐心等待」
+        showToast(msg, 'error');
+      }
+    });
+  }
+
+  // 需求选择器：返回 Promise<need|null>
+  function showNeedPicker(needs) {
+    return new Promise(function (resolve) {
+      const modal = document.createElement('div');
+      modal.className = 'modal show';
+      modal.innerHTML = `
+        <div class="modal-mask"></div>
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>选择要邀请的需求</h3>
+            <button type="button" class="modal-close" data-close>×</button>
+          </div>
+          <div class="modal-body invite-need-list">
+            ${needs.map(n => {
+              const petName = (n.pet && n.pet.name) || '宠物';
+              const species = (n.pet && n.pet.species) || '';
+              const icon = { '猫': '🐱', '狗': '🐶', '兔': '🐰', '其他': '🐾' }[species] || '🐾';
+              return `<div class="invite-need-item" data-need-id="${n.id}">
+                <span class="invite-need-icon">${icon}</span>
+                <div class="invite-need-body">
+                  <div class="invite-need-title">${escapeHtml(petName)}</div>
+                  <div class="invite-need-dates">${escapeHtml(n.start_date)} 至 ${escapeHtml(n.end_date)}</div>
+                </div>
+                <span class="invite-need-arrow">›</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      modal.querySelector('[data-close]').addEventListener('click', () => {
+        modal.remove();
+        resolve(null);
+      });
+      modal.querySelector('.modal-mask').addEventListener('click', () => {
+        modal.remove();
+        resolve(null);
+      });
+      modal.querySelectorAll('.invite-need-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.getAttribute('data-need-id');
+          const picked = needs.find(n => n.id === id);
+          modal.remove();
+          resolve(picked || null);
+        });
+      });
+    });
   }
 
   if (document.readyState === 'loading') {
