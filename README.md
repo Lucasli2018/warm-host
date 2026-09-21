@@ -2,6 +2,8 @@
 
 > 让每一次寄养都有温度 —— 宠物寄养匹配 MVP
 
+线上：https://warm-host.pages.dev ｜ 管理后台：https://warm-host.pages.dev/admin.html
+
 节假日宠物寄养难找：个人愿意接单，但双方缺信任、缺记录。暖木家用「实名审核 + 首单担保 + 真实评价 + 黑名单公示」四件套解决信任问题。
 
 ## 功能
@@ -121,6 +123,20 @@ wrangler pages deploy public --project-name warm-host
 ```
 
 R2 桶名 `warm-host-images`，D1 库名 `warm-host-db`，`database_id` 已写入 `wrangler.toml`。
+
+> 部署前若 CF API 请求超时，加 `NODE_OPTIONS=--dns-result-order=ipv4first`（本机无 IPv6 出口）。
+
+### 部署后验证
+
+```bash
+node tools/live-smoke.mjs                       # 线上只读冒烟：首页/公开接口/401/admin 登录/管理接口/D1
+node tools/fix-pages-branch.mjs                 # 查 Pages 项目配置（生产分支、D1/R2 binding、最近部署）
+node tools/fix-pages-branch.mjs --fix           # 生产分支不是 master 时修正，然后重新 deploy
+```
+
+> **坑**：Pages 项目的 `production_branch` 必须为 `master`（当前项目已修正）。否则 master 上的部署会落进
+> **preview 环境**：deployment URL 与 `master.warm-host.pages.dev` 都正常，但生产域名 `warm-host.pages.dev`
+> 返回 CF 404 HTML（约 16KB），且生产环境的 D1/R2 binding 为空。
 
 **生产环境首次登录后请立即修改 admin 密码**（当前为 `admin / admin123`）。
 
