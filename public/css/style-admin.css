@@ -412,6 +412,115 @@
   font-size: 13px;
 }
 
+/* ============ 黑名单处理 ============ */
+.admin-tab-badge {
+  display: inline-block;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--color-error);
+  color: var(--color-text-inverse);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.admin-bl-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.admin-bl-summary-num {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.admin-bl-summary-sep {
+  color: var(--color-text-muted);
+}
+
+.admin-bl-card {
+  padding: 16px;
+}
+
+.admin-bl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.admin-bl-target {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.admin-bl-name {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.admin-bl-phone {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.admin-bl-category {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 4px 10px;
+  border-radius: var(--radius-chip);
+  background: var(--color-bg-cream);
+  color: var(--color-primary-dark);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-bl-details {
+  margin-bottom: 10px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.admin-bl-meta,
+.admin-bl-handled {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.admin-bl-handled {
+  margin-top: 4px;
+}
+
+.admin-bl-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.admin-bl-actions .btn {
+  flex: 1;
+  min-height: 40px;
+}
+
 /* ============ 移动端适配 ============ */
 @media (max-width: 480px) {
   .admin-host-actions .btn {
@@ -424,5 +533,12 @@
   }
   .admin-code-generate .btn {
     width: 100%;
+  }
+  .admin-bl-actions {
+    flex-direction: column;
+  }
+  .admin-bl-head {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

@@ -87,7 +87,7 @@ export async function onRequestPost({ request, env, params }) {
     type: notifType,
     title,
     body: bodyText,
-    link: "/my.html?tab=reports",
+    link: "/my.html?tab=host",
   });
 
   // 通知举报人
@@ -96,7 +96,7 @@ export async function onRequestPost({ request, env, params }) {
     type: notifType,
     title,
     body: `您提交的举报（类别：${record.category}）已处理：${isConfirm ? "已确认" : "已驳回"}`,
-    link: "/my.html?tab=reports",
+    link: "/my.html?tab=host",
   });
 
   return json({

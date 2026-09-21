@@ -1,5 +1,5 @@
 // warm-host · 管理后台页面
-// 三个 Tab：寄养人审核 / 用户管理 / 邀请码
+// 四个 Tab：寄养人审核 / 用户管理 / 邀请码 / 黑名单处理
 // 登录守卫：未登录跳 auth.html；非 admin 显示"无权限"
 
 const HOST_STATUS_LABELS = {
@@ -50,14 +50,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ============ Tab 切换 ============
   const tabs = document.querySelectorAll('.admin-tab');
+
+  function activateAdminTab(name) {
+    const valid = document.getElementById(`admin-tab-${name}`) ? name : 'hosts';
+    tabs.forEach(x => x.classList.toggle('active', x.dataset.tab === valid));
+    document.querySelectorAll('.admin-pane').forEach(p =>
+      p.classList.toggle('active', p.id === `admin-tab-${valid}`)
+    );
+  }
+
   tabs.forEach(t => {
-    t.addEventListener('click', () => {
-      tabs.forEach(x => x.classList.toggle('active', x === t));
-      document.querySelectorAll('.admin-pane').forEach(p =>
-        p.classList.toggle('active', p.id === `admin-tab-${t.dataset.tab}`)
-      );
-    });
+    t.addEventListener('click', () => activateAdminTab(t.dataset.tab));
   });
+
+  // 支持通知直达：/admin.html?tab=blacklist
+  activateAdminTab(new URLSearchParams(location.search).get('tab') || 'hosts');
 
   // ============ 退出登录 ============
   document.getElementById('btn-logout').addEventListener('click', async () => {
@@ -69,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ============ 寄养人审核 ============
   const hostsListEl = document.getElementById('hosts-list');
-  const hostChips = document.querySelectorAll('.admin-filter-chip');
+  const hostChips = document.querySelectorAll('#admin-tab-hosts .admin-filter-chip');
   let currentHostStatus = 'pending';
 
   async function loadHosts() {
@@ -362,4 +369,165 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   loadCodes();
+
+  // ============ 黑名单处理 ============
+  const BL_STATUS_LABELS = {
+    pending: '待处理',
+    confirmed: '已确认',
+    dismissed: '已驳回',
+  };
+
+  const BL_STATUS_CLASS = {
+    pending: 'admin-status-pending',
+    confirmed: 'admin-status-active',
+    dismissed: 'admin-status-rejected',
+  };
+
+  const blListEl = document.getElementById('bl-list');
+  const blChips = document.querySelectorAll('#admin-tab-blacklist .admin-filter-chip');
+  const blBadge = document.getElementById('bl-badge');
+  const blPendingNum = document.getElementById('bl-pending-num');
+  const blPageNum = document.getElementById('bl-page-num');
+  const blPagerLabel = document.getElementById('bl-pager-label');
+  const btnBlPrev = document.getElementById('btn-bl-prev');
+  const btnBlNext = document.getElementById('btn-bl-next');
+
+  const BL_PAGE_SIZE = 20;
+  let blStatus = 'pending';
+  let blPage = 1;
+  let blTotalPages = 1;
+
+  function renderBlBadge(pendingCount) {
+    blPendingNum.textContent = pendingCount;
+    if (pendingCount > 0) {
+      blBadge.textContent = pendingCount > 99 ? '99+' : String(pendingCount);
+      blBadge.style.display = '';
+    } else {
+      blBadge.style.display = 'none';
+    }
+  }
+
+  async function loadBlacklist() {
+    blListEl.innerHTML = '<div class="empty-state"><span class="emoji">⏳</span><h3>加载中…</h3></div>';
+    try {
+      const params = new URLSearchParams({
+        status: blStatus,
+        page: String(blPage),
+        pageSize: String(BL_PAGE_SIZE),
+      });
+      const data = await ApiClient.get(`/admin/blacklist?${params.toString()}`);
+      const records = data.records || [];
+
+      blTotalPages = Math.max(1, Math.ceil((data.total || 0) / (data.pageSize || BL_PAGE_SIZE)));
+      if (blPage > blTotalPages) {
+        blPage = blTotalPages;
+        return loadBlacklist();
+      }
+      blPageNum.textContent = blPage;
+      blPagerLabel.textContent = `${blPage} / ${blTotalPages}`;
+      btnBlPrev.disabled = blPage <= 1;
+      btnBlNext.disabled = blPage >= blTotalPages;
+      renderBlBadge(data.pendingCount || 0);
+
+      if (records.length === 0) {
+        blListEl.innerHTML = `<div class="empty-state">
+          <span class="emoji">🛡️</span>
+          <h3>暂无「${BL_STATUS_LABELS[blStatus] || '全部'}」举报记录</h3>
+        </div>`;
+        return;
+      }
+      blListEl.innerHTML = records.map(renderBlCard).join('');
+      bindBlActions();
+    } catch (err) {
+      blListEl.innerHTML = `<div class="empty-state">
+        <span class="emoji">❌</span>
+        <h3>加载失败</h3>
+        <p>${escapeHtml(err.message || '请稍后重试')}</p>
+      </div>`;
+    }
+  }
+
+  function renderBlCard(r) {
+    const targetTypeLabel = r.targetType === 'host' ? '寄养人' : '主人';
+    const statusLabel = BL_STATUS_LABELS[r.status] || r.status;
+    const statusClass = BL_STATUS_CLASS[r.status] || '';
+    const phone = r.targetPhoneMasked
+      ? `<span class="admin-bl-phone">${escapeHtml(r.targetPhoneMasked)}</span>`
+      : '';
+    const handled = r.handledAt
+      ? `<div class="admin-bl-handled">处理于 ${escapeHtml((r.handledAt || '').slice(0, 16))}${
+          r.handledByNickname ? ` · 处理人 ${escapeHtml(r.handledByNickname)}` : ''
+        }</div>`
+      : '';
+    const actions = r.status === 'pending'
+      ? `<div class="admin-bl-actions">
+          <button class="btn btn-primary admin-bl-action" data-action="confirm" data-id="${r.id}">✅ 确认举报</button>
+          <button class="btn btn-ghost admin-bl-action" data-action="dismiss" data-id="${r.id}">🚫 驳回</button>
+        </div>`
+      : '';
+
+    return `<div class="admin-bl-card card">
+      <div class="admin-bl-head">
+        <div class="admin-bl-target">
+          <span class="chip">${targetTypeLabel}</span>
+          <span class="admin-bl-name">${escapeHtml(r.targetNickname || '未知用户')}</span>
+          ${phone}
+        </div>
+        <span class="admin-status ${statusClass}">${statusLabel}</span>
+      </div>
+      <div class="admin-bl-category">类别：${escapeHtml(r.category)}</div>
+      <div class="admin-bl-details">${escapeHtml(r.details || '（无详细描述）')}</div>
+      <div class="admin-bl-meta">
+        举报人 ${escapeHtml(r.reporterNickname || '未知用户')} · 提交于 ${escapeHtml((r.createdAt || '').slice(0, 16))}
+      </div>
+      ${handled}
+      ${actions}
+    </div>`;
+  }
+
+  function bindBlActions() {
+    blListEl.querySelectorAll('.admin-bl-action').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const action = btn.dataset.action;
+        const id = btn.dataset.id;
+        if (action === 'dismiss') {
+          if (!confirm('确定驳回该举报？')) return;
+          await submitBlAction(id, { action: 'dismiss' }, btn);
+          return;
+        }
+        if (!confirm('确定确认该举报？确认后举报成立。')) return;
+        const banUser = confirm('是否同时禁用被举报账号？\n确定 = 禁用并强制下线；取消 = 仅记录，不禁用。');
+        await submitBlAction(id, { action: 'confirm', banUser }, btn);
+      });
+    });
+  }
+
+  async function submitBlAction(id, payload, btn) {
+    btn.disabled = true;
+    try {
+      await ApiClient.post(`/admin/blacklist/${encodeURIComponent(id)}`, payload);
+      showToast(payload.banUser ? '已确认并禁用该账号' : (payload.action === 'dismiss' ? '已驳回' : '已确认'), 'success');
+      await loadBlacklist();
+    } catch (err) {
+      showToast(err.message, 'error');
+      btn.disabled = false;
+    }
+  }
+
+  blChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      blChips.forEach(c => c.classList.toggle('active', c === chip));
+      blStatus = chip.dataset.status;
+      blPage = 1;
+      loadBlacklist();
+    });
+  });
+  btnBlPrev.addEventListener('click', () => {
+    if (blPage > 1) { blPage -= 1; loadBlacklist(); }
+  });
+  btnBlNext.addEventListener('click', () => {
+    if (blPage < blTotalPages) { blPage += 1; loadBlacklist(); }
+  });
+
+  loadBlacklist();
 });

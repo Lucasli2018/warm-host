@@ -33,6 +33,7 @@
       <button class="admin-tab active" data-tab="hosts">寄养人审核</button>
       <button class="admin-tab" data-tab="users">用户管理</button>
       <button class="admin-tab" data-tab="codes">邀请码</button>
+      <button class="admin-tab" data-tab="blacklist">黑名单处理<span class="admin-tab-badge" id="bl-badge" style="display:none">0</span></button>
     </div>
 
     <!-- ============ 寄养人审核 Tab ============ -->
@@ -95,6 +96,32 @@
       <div class="card">
         <h3 class="admin-section-title">可用邀请码（最近 50 个）</h3>
         <div class="admin-code-grid" id="codes-list"></div>
+      </div>
+    </div>
+
+    <!-- ============ 黑名单处理 Tab ============ -->
+    <div id="admin-tab-blacklist" class="admin-pane">
+      <div class="admin-filter">
+        <button class="chip chip-primary admin-filter-chip active" data-status="pending">待处理</button>
+        <button class="chip admin-filter-chip" data-status="confirmed">已确认</button>
+        <button class="chip admin-filter-chip" data-status="dismissed">已驳回</button>
+        <button class="chip admin-filter-chip" data-status="all">全部</button>
+      </div>
+      <div class="admin-bl-summary" id="bl-summary">
+        <span class="admin-bl-summary-label">待处理</span>
+        <span class="admin-bl-summary-num" id="bl-pending-num">0</span>
+        <span class="admin-bl-summary-sep">·</span>
+        <span class="admin-bl-summary-label">第</span>
+        <span class="admin-bl-summary-num" id="bl-page-num">1</span>
+        <span class="admin-bl-summary-label">页</span>
+      </div>
+      <div class="admin-pager" id="bl-pager">
+        <button class="btn btn-ghost" id="btn-bl-prev">上一页</button>
+        <span class="admin-pager-label" id="bl-pager-label">- / -</span>
+        <button class="btn btn-ghost" id="btn-bl-next">下一页</button>
+      </div>
+      <div id="bl-list" class="admin-list">
+        <div class="empty-state"><span class="emoji">⏳</span><h3>加载中…</h3></div>
       </div>
     </div>
 

@@ -118,8 +118,8 @@ export async function onRequestPost({ request, env }) {
     userId: targetUserId,
     type: "blacklist_report",
     title: "收到举报",
-    body: `您收到一条举报（类别：${category}），详情可在「我的-举报」查看`,
-    link: "/my.html?tab=reports",
+    body: `您收到一条举报（类别：${category}）。如有异议可联系平台管理员核实。`,
+    link: "/my.html?tab=host",
   });
 
   // 通知所有 admin
