@@ -62,6 +62,12 @@
       <!-- 首单担保提示 -->
       <div id="host-sponsor-hint" class="host-sponsor-hint host-banner-hidden"></div>
 
+      <!-- 担保卡片区块（sponsored 卡片 / 邀请输入 / 待接受 / 已发出） -->
+      <div id="sponsor-section"></div>
+
+      <!-- 黑名单 & 举报区块 -->
+      <div id="blacklist-section" class="blacklist-section"></div>
+
       <!-- 寄养人档案表单（申请表 + 编辑表共用一套 DOM，通过 host-status 控制可编辑性） -->
       <form id="host-form" class="host-form card">
         <h3 class="host-form-title" id="host-form-title">寄养人档案</h3>
@@ -327,6 +333,44 @@
 
         <button type="button" class="btn btn-primary btn-block" id="review-submit">
           <span class="btn-text">提交评价</span>
+          <span class="btn-loading" style="display:none">提交中…</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 举报弹窗 -->
+  <div id="report-modal" class="modal">
+    <div class="modal-mask"></div>
+    <div class="modal-content report-modal" style="max-width:480px">
+      <div class="modal-header">
+        <h3>举报</h3>
+        <button class="modal-close" data-close>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>被举报人 <span class="required">*</span></label>
+          <input type="text" id="report-target" maxlength="40" placeholder="输入对方昵称或手机号">
+        </div>
+        <div class="form-group">
+          <label>举报类别 <span class="required">*</span></label>
+          <div class="report-reasons chip-group" id="report-reasons">
+            <span class="reason-chip" data-cat="人身安全问题">人身安全问题</span>
+            <span class="reason-chip" data-cat="虐待宠物">虐待宠物</span>
+            <span class="reason-chip" data-cat="私自转卖">私自转卖</span>
+            <span class="reason-chip" data-cat="失联/放鸽子">失联/放鸽子</span>
+            <span class="reason-chip" data-cat="虚假资料">虚假资料</span>
+            <span class="reason-chip" data-cat="言语骚扰">言语骚扰</span>
+            <span class="reason-chip" data-cat="其他">其他</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>详情说明</label>
+          <textarea id="report-details" maxlength="500" placeholder="请详细描述事件经过，方便管理员核实（最多 500 字）"></textarea>
+          <div class="char-count"><span id="report-details-count">0</span>/500</div>
+        </div>
+        <button type="button" class="btn btn-primary btn-block" id="report-submit">
+          <span class="btn-text">提交举报</span>
           <span class="btn-loading" style="display:none">提交中…</span>
         </button>
       </div>

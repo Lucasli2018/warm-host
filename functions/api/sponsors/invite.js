@@ -1,8 +1,8 @@
 // POST /api/sponsors/invite — 寄养人邀请担保人
-// Task 12
+// Task 12 (updated in Task 16: 支持 sponsorPhone 二选一)
 //
 // 调用方必须是已审核通过的寄养人（is_host=1 且 host_status='active'）
-// body: { sponsorUserId: "..." }
+// body: { sponsorUserId } 或 { sponsorPhone }（二选一）
 // 校验：不能自己担保、目标存在/未封禁/active/完成≥3单/评分≥4.5、自己未担保、未重复邀请
 // 写入 sponsors 表（sponsor_id=users.id, sponsored_host_id=host_profiles.id）+ 通知担保人
 //
@@ -24,8 +24,21 @@ export async function onRequestPost({ request, env }) {
   if (user.hostStatus !== "active") return fail("寄养人审核通过后才可邀请担保人", 403);
 
   const body = await parseBody(request);
-  const sponsorUserId = body && typeof body.sponsorUserId === "string" ? body.sponsorUserId.trim() : "";
-  if (!sponsorUserId) return fail("缺少 sponsorUserId", 400);
+  let sponsorUserId = body && typeof body.sponsorUserId === "string" ? body.sponsorUserId.trim() : "";
+  const sponsorPhone = body && typeof body.sponsorPhone === "string" ? body.sponsorPhone.trim() : "";
+
+  // 二选一：sponsorUserId 或 sponsorPhone
+  if (!sponsorUserId && sponsorPhone) {
+    if (!/^[1][3-9]\d{9}$/.test(sponsorPhone)) {
+      return fail("手机号格式不正确", 400);
+    }
+    const byPhone = await env.DB.prepare(
+      "SELECT id FROM users WHERE phone = ?"
+    ).bind(sponsorPhone).first();
+    if (!byPhone) return fail("该手机号未注册", 404);
+    sponsorUserId = byPhone.id;
+  }
+  if (!sponsorUserId) return fail("缺少 sponsorUserId 或 sponsorPhone", 400);
 
   // 不能自己担保自己
   if (sponsorUserId === user.id) return fail("不能邀请自己担保", 400);

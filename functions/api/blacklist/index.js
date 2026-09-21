@@ -50,12 +50,33 @@ export async function onRequestPost({ request, env }) {
   const body = await readJson(request);
   if (!body || typeof body !== "object") return fail("请求体格式错误", 400);
 
-  const targetUserId = String(body.targetUserId ?? body.target_user_id ?? "").trim();
+  const targetUserIdRaw = String(body.targetUserId ?? body.target_user_id ?? "").trim();
+  const targetPhone = String(body.targetPhone ?? body.target_phone ?? "").trim();
+  const targetNickname = String(body.targetNickname ?? body.target_nickname ?? "").trim();
   const targetType = String(body.targetType ?? body.target_type ?? "").trim().toLowerCase();
   const category = String(body.category ?? "").trim();
   const details = String(body.details ?? "").trim();
 
-  if (!targetUserId) return fail("缺少 targetUserId", 400);
+  // 解析目标用户：targetUserId 直接给出，或用 targetPhone/targetNickname 反查
+  let targetUserId = targetUserIdRaw;
+  if (!targetUserId && targetPhone) {
+    if (!/^[1][3-9]\d{9}$/.test(targetPhone)) {
+      return fail("手机号格式不正确", 400);
+    }
+    const byPhone = await env.DB.prepare(
+      "SELECT id FROM users WHERE phone = ?"
+    ).bind(targetPhone).first();
+    if (!byPhone) return fail("该手机号未注册", 404);
+    targetUserId = byPhone.id;
+  } else if (!targetUserId && targetNickname) {
+    const byName = await env.DB.prepare(
+      "SELECT id FROM users WHERE nickname = ?"
+    ).bind(targetNickname).first();
+    if (!byName) return fail("该昵称未找到用户", 404);
+    targetUserId = byName.id;
+  }
+
+  if (!targetUserId) return fail("缺少 targetUserId 或 targetPhone", 400);
   if (!targetType) return fail("缺少 targetType", 400);
   if (targetType !== "owner" && targetType !== "host") {
     return fail("targetType 必须是 owner 或 host", 400);

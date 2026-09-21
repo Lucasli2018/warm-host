@@ -642,6 +642,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     fillHostFormFromProfile(currentProfile);
     hostAvailability.classList.remove('host-banner-hidden');
     initCalendar(); // initCalendar 内部会调用 renderCalendar + renderAvailabilityRanges
+    renderSponsorCard(); // Task 16: 担保卡片
   }
 
   function fillHostFormFromProfile(profile) {
@@ -1784,10 +1785,336 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 初始加载（宠物 + 寄养 + 需求 并行；宠物缓存后再拉需求）
+  // ============ 担保卡片（Task 16） ============
+  const sponsorSection = document.getElementById('sponsor-section');
+
+  function renderSponsorCard() {
+    if (!sponsorSection) return;
+    // 非寄养人 / 非 active 状态：隐藏
+    if (hostState !== HOST_STATES.ACTIVE) {
+      sponsorSection.innerHTML = '';
+      return;
+    }
+    // 非寄养人档案 active：也不显示
+    sponsorSection.innerHTML = '<div class="sponsor-loading">加载中…</div>';
+    ApiClient.get('/sponsors/my').then(renderSponsorData).catch(() => {
+      sponsorSection.innerHTML = '<div class="sponsor-error">加载失败</div>';
+    });
+  }
+
+  function renderSponsorData(data) {
+    if (!sponsorSection) return;
+    if (!data || typeof data !== 'object') {
+      sponsorSection.innerHTML = '';
+      return;
+    }
+    var sponsored = !!data.sponsored;
+    var sponsoredBy = data.sponsoredBy || null;
+    var pendingInvites = data.pendingInvites || [];
+    var receivedInvites = data.receivedInvites || [];
+
+    var html = '';
+
+    if (sponsored) {
+      var spName = sponsoredBy && sponsoredBy.sponsor ? sponsoredBy.sponsor.nickname : '担保人';
+      html += `
+        <div class="sponsor-card accepted">
+          <div class="sponsor-card-icon">✅</div>
+          <div class="sponsor-card-body">
+            <div class="sponsor-card-title">已获得担保人</div>
+            <div class="sponsor-card-sub">担保：<strong>${escapeHtml(spName)}</strong> · 首单无需额外审核</div>
+          </div>
+        </div>`;
+    } else {
+      // 邀请输入区
+      html += `
+        <div class="sponsor-card">
+          <div class="sponsor-card-icon">🛡️</div>
+          <div class="sponsor-card-body">
+            <div class="sponsor-card-title">首单担保</div>
+            <div class="sponsor-card-sub">寄养人首单需邀请一位担保人做信誉背书</div>
+            <div class="sponsor-invite-row">
+              <input type="tel" id="sponsor-phone-input" placeholder="输入担保人手机号（11 位）" maxlength="11">
+              <button type="button" class="btn btn-primary" id="btn-sponsor-invite">邀请</button>
+            </div>
+          </div>
+        </div>`;
+
+      // 待我接受（receivedInvites）
+      if (receivedInvites.length > 0) {
+        html += '<div class="sponsor-subtitle">别人邀请我担保 · 待接受</div>';
+        html += '<div class="sponsor-list">';
+        receivedInvites.forEach(function (r) {
+          var nick = r.invitee && r.invitee.nickname ? r.invitee.nickname : '匿名';
+          html += `
+            <div class="sponsor-item">
+              <div class="sponsor-item-info">
+                <span class="sponsor-item-nick">${escapeHtml(nick)}</span>
+                <span class="sponsor-item-time">${escapeHtml((r.createdAt || '').slice(0, 10))}</span>
+              </div>
+              <button type="button" class="btn btn-small btn-primary" data-sponsor-id="${escapeHtml(r.sponsorId)}">接受</button>
+            </div>`;
+        });
+        html += '</div>';
+      }
+
+      // 我发出的（pendingInvites）
+      if (pendingInvites.length > 0) {
+        html += '<div class="sponsor-subtitle">我发出的邀请 · 待对方接受</div>';
+        html += '<div class="sponsor-list">';
+        pendingInvites.forEach(function (p) {
+          var sp = p.sponsor || {};
+          var nick = sp.nickname || '匿名';
+          var rating = sp.avgRating ? sp.avgRating.toFixed(1) : '-';
+          var orders = sp.completedOrders || 0;
+          html += `
+            <div class="sponsor-item sponsor-card pending">
+              <div class="sponsor-item-info">
+                <span class="sponsor-item-nick">${escapeHtml(nick)}</span>
+                <span class="sponsor-item-meta">★${rating} · ${orders} 单 · ${escapeHtml((p.createdAt || '').slice(0, 10))}</span>
+              </div>
+            </div>`;
+        });
+        html += '</div>';
+      }
+    }
+
+    sponsorSection.innerHTML = html;
+
+    // 绑定事件
+    var phoneInput = document.getElementById('sponsor-phone-input');
+    var inviteBtn = document.getElementById('btn-sponsor-invite');
+    if (inviteBtn && phoneInput) {
+      inviteBtn.addEventListener('click', async function () {
+        var phone = phoneInput.value.trim();
+        if (!/^[1][3-9]\d{9}$/.test(phone)) {
+          showToast('手机号格式不正确', 'warning');
+          return;
+        }
+        inviteBtn.disabled = true;
+        inviteBtn.textContent = '邀请中…';
+        try {
+          await ApiClient.post('/sponsors/invite', { sponsorPhone: phone });
+          showToast('已发送邀请', 'success');
+          phoneInput.value = '';
+          // 刷新担保卡片
+          ApiClient.get('/sponsors/my').then(renderSponsorData);
+        } catch (err) {
+          showToast(err.message || '邀请失败', 'error');
+        } finally {
+          inviteBtn.disabled = false;
+          inviteBtn.textContent = '邀请';
+        }
+      });
+    }
+
+    // 接受邀请按钮
+    if (sponsorSection) {
+      sponsorSection.querySelectorAll('[data-sponsor-id]').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          var sponsorId = btn.dataset.sponsorId;
+          if (!sponsorId) return;
+          btn.disabled = true;
+          btn.textContent = '处理中…';
+          try {
+            await ApiClient.post('/sponsors/accept', { sponsorId: sponsorId });
+            showToast('已接受担保邀请', 'success');
+            // 刷新担保卡片
+            ApiClient.get('/sponsors/my').then(renderSponsorData);
+          } catch (err) {
+            showToast(err.message || '接受失败', 'error');
+            btn.disabled = false;
+            btn.textContent = '接受';
+          }
+        });
+      });
+    }
+  }
+
+  // ============ 黑名单 & 举报（Task 16） ============
+  const blacklistSection = document.getElementById('blacklist-section');
+  let reportSelectedCat = '';
+
+  function loadBlacklistData() {
+    if (!blacklistSection) return;
+    ApiClient.get('/blacklist/my').then(function (data) {
+      renderBlacklistSection(data);
+    }).catch(function () {
+      // 未登录或接口异常：显示举报入口按钮即可
+      renderBlacklistSection({ reported: [], reportedAgainstMe: [] });
+    });
+  }
+
+  function renderBlacklistSection(data) {
+    if (!blacklistSection) return;
+    data = data || {};
+    var reported = data.reported || [];
+    var againstMe = data.reportedAgainstMe || [];
+
+    var html = '<div class="blacklist-card">';
+    html += '<div class="blacklist-card-header">';
+    html += '<h3>举报与安全</h3>';
+    html += '<button type="button" class="btn btn-small btn-secondary" id="btn-open-report">🚨 举报他人</button>';
+    html += '</div>';
+
+    // 我的举报
+    html += '<div class="blacklist-subtitle">我发出的举报</div>';
+    if (reported.length === 0) {
+      html += '<div class="blacklist-empty">暂无举报记录</div>';
+    } else {
+      html += '<div class="blacklist-list">';
+      reported.forEach(function (r) {
+        var statusMap = {
+          pending: ['badge-bl-pending', '待处理'],
+          confirmed: ['badge-bl-confirmed', '已确认'],
+          dismissed: ['badge-bl-dismissed', '已驳回'],
+        };
+        var sm = statusMap[r.status] || statusMap.pending;
+        html += `
+          <div class="blacklist-item">
+            <div class="blacklist-item-head">
+              <span class="blacklist-item-cat">${escapeHtml(r.category)}</span>
+              <span class="badge ${sm[0]}">${sm[1]}</span>
+            </div>
+            <div class="blacklist-item-detail">${escapeHtml((r.details || '').slice(0, 80))}</div>
+            <div class="blacklist-item-foot">
+              <span>对象：${escapeHtml((r.target && r.target.nickname) || '匿名')}</span>
+              <span>${escapeHtml((r.createdAt || '').slice(0, 10))}</span>
+            </div>
+          </div>`;
+      });
+      html += '</div>';
+    }
+
+    // 举报我的
+    html += '<div class="blacklist-subtitle">举报我的</div>';
+    if (againstMe.length === 0) {
+      html += '<div class="blacklist-empty">暂无举报</div>';
+    } else {
+      html += '<div class="blacklist-list">';
+      againstMe.forEach(function (r) {
+        var statusMap = {
+          pending: ['badge-bl-pending', '待处理'],
+          confirmed: ['badge-bl-confirmed', '已确认'],
+          dismissed: ['badge-bl-dismissed', '已驳回'],
+        };
+        var sm = statusMap[r.status] || statusMap.pending;
+        html += `
+          <div class="blacklist-item">
+            <div class="blacklist-item-head">
+              <span class="blacklist-item-cat">${escapeHtml(r.category)}</span>
+              <span class="badge ${sm[0]}">${sm[1]}</span>
+            </div>
+            <div class="blacklist-item-detail">${escapeHtml((r.details || '').slice(0, 80))}</div>
+            <div class="blacklist-item-foot">
+              <span>举报人：${escapeHtml((r.reporter && r.reporter.nickname) || '匿名')}</span>
+              <span>${escapeHtml((r.createdAt || '').slice(0, 10))}</span>
+            </div>
+          </div>`;
+      });
+      html += '</div>';
+    }
+
+    html += '</div>';
+    blacklistSection.innerHTML = html;
+
+    // 绑定举报弹窗
+    var reportBtn = document.getElementById('btn-open-report');
+    if (reportBtn) {
+      reportBtn.addEventListener('click', function () {
+        document.getElementById('report-modal').classList.add('active');
+      });
+    }
+  }
+
+  // 举报弹窗逻辑
+  (function () {
+    var reasonsEl = document.getElementById('report-reasons');
+    var detailsEl = document.getElementById('report-details');
+    var countEl = document.getElementById('report-details-count');
+    var submitBtn = document.getElementById('report-submit');
+    var targetEl = document.getElementById('report-target');
+    if (!reasonsEl || !submitBtn) return;
+
+    reasonsEl.querySelectorAll('.reason-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        reasonsEl.querySelectorAll('.reason-chip').forEach(function (c) {
+          c.classList.remove('active');
+        });
+        chip.classList.add('active');
+        reportSelectedCat = chip.dataset.cat || '';
+      });
+    });
+
+    if (detailsEl && countEl) {
+      detailsEl.addEventListener('input', function () {
+        countEl.textContent = detailsEl.value.length;
+      });
+    }
+
+    submitBtn.addEventListener('click', async function () {
+      var target = targetEl ? targetEl.value.trim() : '';
+      if (!target) { showToast('请输入对方昵称或手机号', 'warning'); return; }
+      if (!reportSelectedCat) { showToast('请选择举报类别', 'warning'); return; }
+      var details = detailsEl ? detailsEl.value.trim() : '';
+      if (!details) { showToast('请填写详情说明', 'warning'); return; }
+      if (details.length > 500) { showToast('详情最多 500 字', 'warning'); return; }
+
+      // 判断是手机号还是昵称
+      var body = {
+        category: reportSelectedCat,
+        details: details,
+        targetType: 'owner',
+      };
+      if (/^[1][3-9]\d{9}$/.test(target)) {
+        body.targetPhone = target;
+      } else {
+        body.targetNickname = target;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.querySelector('.btn-text').style.display = 'none';
+      submitBtn.querySelector('.btn-loading').style.display = '';
+
+      try {
+        await ApiClient.post('/blacklist', body);
+        showToast('举报已提交，管理员将尽快处理', 'success');
+        // 关闭弹窗 & 重置
+        document.getElementById('report-modal').classList.remove('active');
+        reportSelectedCat = '';
+        if (targetEl) targetEl.value = '';
+        if (detailsEl) detailsEl.value = '';
+        if (countEl) countEl.textContent = '0';
+        reasonsEl.querySelectorAll('.reason-chip').forEach(function (c) { c.classList.remove('active'); });
+        loadBlacklistData();
+      } catch (err) {
+        showToast(err.message || '提交失败', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.querySelector('.btn-text').style.display = '';
+        submitBtn.querySelector('.btn-loading').style.display = 'none';
+      }
+    });
+  })();
+
+  // 弹窗关闭（mask 点击）
+  document.querySelectorAll('#report-modal .modal-mask').forEach(function (m) {
+    m.addEventListener('click', function () {
+      document.getElementById('report-modal').classList.remove('active');
+    });
+  });
+  document.querySelectorAll('#report-modal [data-close]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.getElementById('report-modal').classList.remove('active');
+    });
+  });
+
+  // ============ 初始加载（宠物 + 寄养 + 需求 并行；宠物缓存后再拉需求） ============
   await Promise.all([loadPets(), loadHost()]);
   await refreshPetsCache();
   await loadNeeds();
+  loadBlacklistData();
+  renderSponsorCard();
 
   // ============ URL 参数 (?tab=... & role=host) ============
   // 支持 tab: pets / needs / orders / host / profile

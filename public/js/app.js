@@ -37,6 +37,105 @@
     return typeof window !== 'undefined' && window.innerWidth <= MOBILE_MAX_W;
   }
 
+  // ============ 桌面端顶部导航 ============
+  var DESKTOP_TABS = [
+    { key: 'home',   label: '首页',   href: '/index.html',   requiresAuth: false },
+    { key: 'hosts',  label: '寄养人', href: '/hosts.html',   requiresAuth: false },
+    { key: 'profile',label: '我的',   href: '/my.html?tab=profile', requiresAuth: true  },
+  ];
+
+  function buildDesktopNav() {
+    if (isMobile()) return;
+    // 已经存在则跳过
+    if (document.querySelector('.desktop-nav')) return;
+
+    var nav = document.createElement('nav');
+    nav.className = 'desktop-nav';
+    nav.setAttribute('role', 'navigation');
+    nav.setAttribute('aria-label', '顶部导航');
+
+    var brand = document.createElement('a');
+    brand.className = 'desktop-nav-brand';
+    brand.href = '/index.html';
+    brand.innerHTML = '🏡 warm-host';
+    nav.appendChild(brand);
+
+    var links = document.createElement('div');
+    links.className = 'desktop-nav-links';
+
+    // 已登录：显示「我的」；admin 显示「管理」
+    var authed = ApiClient && typeof ApiClient.isAuthed === 'function' && ApiClient.isAuthed();
+
+    DESKTOP_TABS.forEach(function (tab) {
+      if (tab.key === 'profile' && !authed) return;
+      var a = document.createElement('a');
+      a.className = 'desktop-nav-link';
+      a.href = tab.href;
+      a.textContent = tab.label;
+      links.appendChild(a);
+    });
+
+    if (authed) {
+      // 拉取当前用户信息以决定是否需要显示「管理」入口
+      ApiClient.get('/auth/me').then(function (me) {
+        if (me && me.role === 'admin') {
+          var adminA = document.createElement('a');
+          adminA.className = 'desktop-nav-link';
+          adminA.href = '/admin.html';
+          adminA.textContent = '管理';
+          // 插到「我的」之后
+          var profileLink = links.querySelector('a[href^="/my.html"]');
+          if (profileLink && profileLink.nextSibling) {
+            links.insertBefore(adminA, profileLink.nextSibling);
+          } else {
+            links.appendChild(adminA);
+          }
+        }
+        if (me && me.nickname) {
+          var userChip = document.createElement('span');
+          userChip.className = 'desktop-nav-user';
+          userChip.textContent = '👤 ' + me.nickname;
+          links.appendChild(userChip);
+        }
+      }).catch(function () { /* 静默 */ });
+
+      var logoutBtn = document.createElement('button');
+      logoutBtn.className = 'desktop-nav-logout';
+      logoutBtn.textContent = '退出';
+      logoutBtn.addEventListener('click', async function () {
+        try { await ApiClient.post('/auth/logout', {}); } catch (_) {}
+        location.href = '/auth.html';
+      });
+      links.appendChild(logoutBtn);
+    } else {
+      var loginA = document.createElement('a');
+      loginA.className = 'desktop-nav-link desktop-nav-cta';
+      loginA.href = '/auth.html';
+      loginA.textContent = '登录';
+      links.appendChild(loginA);
+    }
+
+    nav.appendChild(links);
+    document.body.insertBefore(nav, document.body.firstChild);
+  }
+
+  function init() {
+    if (isMobile()) {
+      if (document.body) {
+        buildBar();
+      } else {
+        document.addEventListener('DOMContentLoaded', buildBar);
+      }
+      return;
+    }
+    // 桌面端：注入顶部导航
+    if (document.body) {
+      buildDesktopNav();
+    } else {
+      document.addEventListener('DOMContentLoaded', buildDesktopNav);
+    }
+  }
+
   function pathname() {
     // wrangler 下 /index.html 与 / 会重定向到 /，规范化
     var p = location.pathname || '/';
@@ -139,15 +238,6 @@
     bar.querySelectorAll('.bottom-tab').forEach(function (el) {
       el.classList.toggle('active', el === clicked);
     });
-  }
-
-  function init() {
-    if (!isMobile()) return;
-    if (document.body) {
-      buildBar();
-    } else {
-      document.addEventListener('DOMContentLoaded', buildBar);
-    }
   }
 
   // api.js 未加载时降级为无鉴权 tab（跳过 auth 检查）
