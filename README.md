@@ -47,9 +47,10 @@ warm-host/
 │   ├── my.html             #   个人中心（宠物/需求/订单/寄养 4 Tab）
 │   ├── admin.html          #   管理后台
 │   └── js/                 #   api.js / app.js(底部Tab) / notifications.js / pages/*
-├── tests/                  # Node.js 集成测试（probe-task*.js + probe.js 总跑器）
+├── tests/                  # 集成测试（probe-task*.js + probe.js 总跑器 + 13b 前端静态契约）
+├── scripts/                # init-d1.mjs（远端 D1 初始化）/ gen-seed-sql.mjs（生成播种 SQL）
+├── tools/                  # reset-dev / seed-dev / health-check / run-suites / clean-css
 ├── docs/                   # design.md（733 行完整设计）+ 实施计划
-├── tools/clean-css.js      # style.css 编码清理工具（一次性）
 └── wrangler.toml
 ```
 
@@ -70,26 +71,58 @@ wrangler pages dev --port 8787 --persist-to ./.wrangler-dev
 
 ## 测试
 
+回归套件打真实 HTTP 接口，覆盖注册/审核/下单/状态机/评价/担保/黑名单/通知全链路。
+
 ```bash
-# 保持 wrangler dev 在 8787 运行，然后：
-node tests/probe.js        # 全量回归（14 套件，1000+ 断言）
-node tests/probe-task12.js # 单套件
+# 1) 一键重置本地环境（清库 + 预置 schema + 播种 admin/邀请码）
+PERSIST=./.wrangler-clean node tools/reset-dev.mjs
+
+# 2) 启动 dev（务必带 DISABLE_RATE_LIMIT，否则 20 次/15 分钟的注册限流会让后半程假红）
+node D:/npm-global/node_modules/wrangler/bin/wrangler.js pages dev \
+     --port 8787 --persist-to ./.wrangler-clean --binding DISABLE_RATE_LIMIT=1
+
+# 3) 前置种子：把 admin 变成「已通过审核的寄养人」（部分套件的隐含依赖）
+node tools/seed-dev.mjs
+
+# 4) 健康检查（区分「端口被僵尸 workerd 占住」）
+node tools/health-check.mjs
+
+# 5) 全量 / 单套件
+node tests/probe.js             # 16 套件（含 13b 前端静态契约）
+node tests/probe-task12.js      # 单套件
+node tools/run-suites.mjs 10a   # 逐套件跑 + 打印耗时（诊断卡点用）
 ```
 
-测试脚本通过 HTTP 打真实 API：注册/审核/下单/状态机/评价/担保/黑名单/通知全链路。
+> **坑**：`wrangler pages dev` 被强杀后 workerd 会变孤儿继续占着端口，此时**连静态页都超时**
+> 但日志仍显示 Ready —— 用 `tools/health-check.mjs` 一眼看出，`taskkill /F /IM workerd.exe` 收尾。
+> 跑完记得杀掉 dev 释放端口。
 
 ## 部署到 Cloudflare
 
+### 方式 A：一键初始化脚本（推荐）
+
 ```bash
-# 1. 创建资源
+# 令牌：CLOUDFLARE_API_TOKEN（需 Account → D1 → Edit）或 TOKEN_FILE=<文件路径>
+TOKEN_FILE=./.cf-token node scripts/init-d1.mjs --create
+```
+
+脚本做的事：建 D1 库（`--create`）→ 按序执行 `migrations/*.sql` → 播种 admin + 10 个邀请码
+→ 自检（12 表 / 14 索引 / 行数 / admin 密码哈希回算）。幂等，可重复执行；`--check` 只自检不写库。
+
+> **为什么必须跑它**：`_middleware.js` 的自动建表只在「users 表不存在」时播种 admin。
+> 若先用本脚本建好表，middleware 会跳过播种 → 线上没有管理员账号。
+
+### 方式 B：手动 wrangler
+
+```bash
 wrangler d1 create warm-host-db          # 把返回的 database_id 填进 wrangler.toml
 wrangler r2 bucket create warm-host-images
-
-# 2. 部署（Pages Functions 自动包含 functions/ 目录）
 wrangler pages deploy public --project-name warm-host
 ```
 
-首次访问时 `_middleware.js` 自动建表 + 播种 admin（**生产环境请立即修改 admin 密码**）。
+R2 桶名 `warm-host-images`，D1 库名 `warm-host-db`，`database_id` 已写入 `wrangler.toml`。
+
+**生产环境首次登录后请立即修改 admin 密码**（当前为 `admin / admin123`）。
 
 ## 安全设计要点
 

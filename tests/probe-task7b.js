@@ -101,7 +101,7 @@ async function main() {
   ok('含 id 参数解析 (p.get(\'id\'))', js4.includes("p.get('id')"));
   ok('含 Promise.all 并行加载', js4.includes('Promise.all'));
   ok('含 404 处理 showNotFound', js4.includes('showNotFound'));
-  ok('含 CTA toast 下单占位', js4.includes('下单功能即将开放') || js4.includes('toast'));
+  ok('含 CTA 邀请接单逻辑（/invite + 需求选择器）', js4.includes('/invite') && js4.includes('showNeedPicker'));
   ok('含 availability 可接单日期渲染', js4.includes('availability') && js4.includes('startDate'));
   ok('含 ratingDistribution 分布条形图', js4.includes('ratingDistribution') || js4.includes('rating-bar'));
   ok('含 reviews 加载更多 loadMoreReviews', js4.includes('loadMoreReviews'));

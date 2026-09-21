@@ -6,7 +6,7 @@ compatibility_date = "2025-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "warm-host-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "36d0d263-b2be-49b3-8ef5-dc6f314c18ea"
 
 [[r2_buckets]]
 binding = "R2"
