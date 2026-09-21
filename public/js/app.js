@@ -57,7 +57,7 @@
     var brand = document.createElement('a');
     brand.className = 'desktop-nav-brand';
     brand.href = '/index.html';
-    brand.innerHTML = '🏡 warm-host';
+    brand.innerHTML = '<img class="desktop-nav-logo" src="/favicon.svg" alt="" width="26" height="26">暖木家';
     nav.appendChild(brand);
 
     var links = document.createElement('div');
