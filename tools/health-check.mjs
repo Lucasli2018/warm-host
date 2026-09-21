@@ -7,6 +7,10 @@
 // 背景：wrangler pages dev 被强杀后 workerd 会变孤儿继续监听端口，
 // 此时 / 与 /api/* 全部超时（静态页也超时），但日志显示 Ready。
 
+// 本机无 IPv6 出口 + *.pages.dev 有 AAAA 记录 → 不强制 IPv4 会 UND_ERR_CONNECT_TIMEOUT
+import dns from "node:dns";
+dns.setDefaultResultOrder("ipv4first");
+
 const B = (process.argv[2] || "http://127.0.0.1:8787").replace(/\/$/, "");
 
 async function hit(path, ms = 8000) {

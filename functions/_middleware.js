@@ -348,6 +348,7 @@ async function handleStats(request, env) {
 
   return new Response(JSON.stringify({
     hosts, pets, needs, orders, reviews, todayOrders,
+    today: todayOrders, // 别名：首页看板「今日新单」历史字段名
   }), {
     status: 200,
     headers: { "content-type": "application/json; charset=utf-8" },

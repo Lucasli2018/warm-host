@@ -7,6 +7,10 @@
 // 覆盖：静态页 / 公开接口 / 未登录拒绝 / admin 登录 / 管理接口 / stats。
 // admin 初始密码来自 scripts/init-d1.mjs 的播种（生产环境请尽快改密）。
 
+// 本机无 IPv6 出口 + *.pages.dev 有 AAAA 记录 → 不强制 IPv4 会 UND_ERR_CONNECT_TIMEOUT
+import dns from "node:dns";
+dns.setDefaultResultOrder("ipv4first");
+
 const B = (process.argv[2] || "https://warm-host.pages.dev").replace(/\/$/, "");
 const ADMIN = { phone: process.env.ADMIN_PHONE || "admin", password: process.env.ADMIN_PASSWORD || "admin123" };
 
@@ -33,7 +37,15 @@ const chk = (name, cond, extra = "") => {
 
 const home = await fetch(B + "/", { signal: AbortSignal.timeout(15000) });
 const homeTxt = await home.text();
-chk("首页 200 且是应用页面（非 CF 404 页）", home.status === 200 && homeTxt.includes("暖木家") || homeTxt.includes("warm-host"));
+chk("首页 200 且是应用页面（非 CF 404 页）", (home.status === 200 && homeTxt.includes("暖木家")) || homeTxt.includes("warm-host"));
+chk("首页引用了站点图标", homeTxt.includes("/favicon.svg") && homeTxt.includes("apple-touch-icon"));
+
+// 图标资源可达性（含隐式 /favicon.ico 请求）
+for (const [path, ctype] of [["/favicon.svg", "svg"], ["/favicon.ico", "icon"], ["/apple-touch-icon.png", "png"]]) {
+  const res = await fetch(B + path, { signal: AbortSignal.timeout(15000) });
+  chk(`GET ${path}`, res.status === 200 && (res.headers.get("content-type") || "").includes(ctype),
+    `${res.status} ${res.headers.get("content-type")}`);
+}
 
 const search = await api("GET", "/api/hosts/search");
 chk("GET /api/hosts/search（公开）", search.status === 200 && typeof search.data?.total === "number", `total=${search.data?.total}`);

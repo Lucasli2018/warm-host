@@ -16,6 +16,10 @@
 //
 // 幂等性：**无**。脚本每次都会新建账号，请勿重复运行（账号已存在会报错退出）。
 
+// 本机无 IPv6 出口 + *.pages.dev 有 AAAA 记录 → 不强制 IPv4 会 UND_ERR_CONNECT_TIMEOUT
+import dns from "node:dns";
+dns.setDefaultResultOrder("ipv4first");
+
 const B = (process.argv[2] || "http://127.0.0.1:8787").replace(/\/$/, "");
 const PASSWORD = "demo123456";
 

@@ -49,22 +49,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ============ 数据看板 ============
   async function loadStats() {
-    const ids = {
-      hosts:   'stat-hosts',
-      pets:    'stat-pets',
-      needs:   'stat-needs',
-      orders:  'stat-orders',
-      reviews: 'stat-reviews',
-      today:   'stat-today',
+    // 元素 id → 后端 /api/stats 字段（today 在接口里叫 todayOrders，兼容两种）
+    const map = {
+      'stat-hosts':   ['hosts'],
+      'stat-pets':    ['pets'],
+      'stat-needs':   ['needs'],
+      'stat-orders':  ['orders'],
+      'stat-reviews': ['reviews'],
+      'stat-today':   ['todayOrders', 'today'],
     };
     try {
       const data = await ApiClient.get('/stats');
-      Object.keys(ids).forEach(k => {
-        const el = document.getElementById(ids[k]);
-        if (!el) return;
-        const v = data && data[k];
+      for (const [id, keys] of Object.entries(map)) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        let v;
+        for (const k of keys) {
+          if (data && Number.isFinite(data[k])) { v = data[k]; break; }
+        }
         el.textContent = (Number.isFinite(v) && v >= 0) ? String(v) : '—';
-      });
+      }
     } catch (err) {
       // 失败静默；元素保持 "—"
     }

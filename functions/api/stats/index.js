@@ -44,5 +44,6 @@ export async function GET(request, env) {
     orders,
     reviews,
     todayOrders,
+    today: todayOrders, // 别名：首页看板「今日新单」历史字段名
   });
 }
