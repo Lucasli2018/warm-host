@@ -41,7 +41,12 @@ export async function onRequestPost({ request, env, params }) {
     .bind(sponsorUserId).first();
   if (!sponsor) return fail("担保人不存在", 404);
   if (sponsor.banned) return fail("担保人已被封禁", 400);
-  if (sponsor.host_status !== "active") return fail("担保人必须是通过审核的寄养人", 400);
+  // 管理员覆盖端点：允许 admin 以「平台担保」身份直接担保，豁免「担保人须是 active 寄养人」校验。
+  // 正常担保流程（老寄养人担保新人）的资格校验在 sponsors/invite.js 中。
+  const isPlatformSponsor = sponsor.id === user.id;
+  if (!isPlatformSponsor && sponsor.host_status !== "active") {
+    return fail("担保人必须是通过审核的寄养人", 400);
+  }
 
   // 写入 sponsors 表
   await env.DB.prepare(
@@ -55,8 +60,10 @@ export async function onRequestPost({ request, env, params }) {
   await createNotification(env, {
     userId: profile.user_id,
     type: "sponsor_accepted",
-    title: "已获得担保人",
-    body: `${sponsor.nickname} 已为您的首单担保，现在可以接单了`,
+    title: isPlatformSponsor ? "平台已为您的首单担保" : "已获得担保人",
+    body: isPlatformSponsor
+      ? "平台已为您的首单担保，现在可以接单了"
+      : `${sponsor.nickname} 已为您的首单担保，现在可以接单了`,
     link: `/my.html?tab=host`,
   });
 

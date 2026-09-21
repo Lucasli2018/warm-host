@@ -51,7 +51,8 @@ warm-host/
 │   └── js/                 #   api.js / app.js(底部Tab) / notifications.js / pages/*
 ├── tests/                  # 集成测试（probe-task*.js + probe.js 总跑器 + 13b 前端静态契约）
 ├── scripts/                # init-d1.mjs（远端 D1 初始化）/ gen-seed-sql.mjs（生成播种 SQL）
-├── tools/                  # reset-dev / seed-dev / health-check / run-suites / clean-css
+├── tools/                  # reset-dev / seed-dev / seed-demo / gen-icons / health-check /
+│                           #   run-suites / live-smoke / fix-pages-branch / clean-css（一次性）
 ├── docs/                   # design.md（733 行完整设计）+ 实施计划
 └── wrangler.toml
 ```
@@ -95,9 +96,45 @@ node tests/probe-task12.js      # 单套件
 node tools/run-suites.mjs 10a   # 逐套件跑 + 打印耗时（诊断卡点用）
 ```
 
-> **坑**：`wrangler pages dev` 被强杀后 workerd 会变孤儿继续占着端口，此时**连静态页都超时**
-> 但日志仍显示 Ready —— 用 `tools/health-check.mjs` 一眼看出，`taskkill /F /IM workerd.exe` 收尾。
-> 跑完记得杀掉 dev 释放端口。
+> **坑 1**：`wrangler pages dev` 被强杀后 workerd 会变孤儿继续占着端口，此时**连静态页都超时**
+> 但日志仍显示 Ready —— 用 `tools/health-check.mjs` 一眼看出。
+> **坑 2**：worker runtime 崩溃（`crash #1`，多发生在改了 `functions/` 触发热重载后）重启会「假活」，
+> 端口在听、请求全超时。两种情况都必须**整棵进程树杀掉重启**，只杀 workerd 不够：
+> ```powershell
+> Get-CimInstance Win32_Process -Filter "name='node.exe'" |
+>   Where-Object { $_.CommandLine -match '--port 8787' } |
+>   ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+> ```
+
+## 演示数据
+
+```bash
+node tools/seed-demo.mjs                              # 本地
+node tools/seed-demo.mjs https://warm-host.pages.dev  # 线上
+```
+
+生成内容（走真实 API，故订单状态机、评分聚合、黑名单过滤都是真实链路产物）：
+
+| 内容 | 数量 |
+|---|---|
+| 账号（5 寄养人 + 6 主人，密码 `demo123456`） | 11 |
+| 宠物档案 | 7 |
+| 已完成订单 + 评价（5 星为主，含 1 条 4 星） | 8 + 8 |
+| 进行中订单 / 待接单需求 | 1 / 3 |
+| 举报（1 条确认并封号→公示、1 条待处理） | 2 |
+
+> 脚本**不幂等**，重复运行会新建账号。线上注册限流为同 IP 15 分钟 20 次，脚本注册 11 个账号，一次跑完即可。
+
+## 站点图标
+
+`public/favicon.svg`（手写矢量：木棕圆角底 + 奶油色小屋 + 珊瑚橘爪印）是唯一源文件，
+位图由脚本生成，改完后重新执行：
+
+```bash
+node tools/gen-icons.mjs     # 需要本机 Chrome，产出 apple-touch-icon.png + favicon.ico(PNG-in-ICO)
+```
+
+7 个页面均已引用 `favicon.svg` / `favicon.ico` / `apple-touch-icon.png` 并带 `theme-color`。
 
 ## 部署到 Cloudflare
 
