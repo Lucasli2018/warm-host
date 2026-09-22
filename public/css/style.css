@@ -1,36 +1,36 @@
 /* ============================================================
-   warm-host · "暖木家" 设计系统
+   warm-host · "蜜桃爪爪" 宠物风设计系统
    来源：docs/design.md §8
    ============================================================ */
 
 /* ============ 设计令牌 (CSS Variables) ============ */
 :root {
   /* 品牌色 */
-  --color-primary: #8B5E3C;
-  --color-primary-dark: #6B4426;
-  --color-bg-cream: #F5E6D3;
-  --color-bg-page-top: #FBF5EE;
-  --color-bg-page-bottom: #F5EBDD;
+  --color-primary: #ED7B78;
+  --color-primary-dark: #D95F5C;
+  --color-bg-cream: #FFEFEB;
+  --color-bg-page-top: #FFF8F5;
+  --color-bg-page-bottom: #FFEFE9;
   --color-card: #FFFFFF;
-  --color-border: rgba(139, 94, 60, 0.12);
-  --color-border-strong: rgba(139, 94, 60, 0.24);
+  --color-border: rgba(233, 118, 123, 0.16);
+  --color-border-strong: rgba(233, 118, 123, 0.32);
 
   /* CTA */
-  --color-cta: #E8845C;
-  --color-cta-dark: #D66E46;
+  --color-cta: #FF7A59;
+  --color-cta-dark: #F2603C;
 
   /* 信任色 */
-  --color-trust: #6B8E5A;
-  --color-trust-dark: #557048;
+  --color-trust: #4FB58B;
+  --color-trust-dark: #3B9E74;
 
   /* 文字 */
-  --color-text: #3D2817;
-  --color-text-secondary: #7A6452;
-  --color-text-muted: #B5A48F;
+  --color-text: #4A2B2B;
+  --color-text-secondary: #8A5F5A;
+  --color-text-muted: #C9A29B;
   --color-text-inverse: #FFFFFF;
 
   /* 状态色 */
-  --color-error: #C94C4C;
+  --color-error: #E0524E;
   --color-warning: #E8A838;
   --color-info: #5A8BB4;
 
@@ -43,17 +43,17 @@
   --space-6: 48px;
 
   /* 圆角 */
-  --radius-card: 16px;
-  --radius-button: 12px;
-  --radius-input: 10px;
+  --radius-card: 20px;
+  --radius-button: 14px;
+  --radius-input: 12px;
   --radius-chip: 999px;
 
   /* 阴影 */
-  --shadow-card: 0 4px 12px rgba(139, 94, 60, 0.08);
-  --shadow-cta: 0 6px 16px rgba(232, 132, 92, 0.32);
+  --shadow-card: 0 6px 18px rgba(233, 110, 105, 0.12);
+  --shadow-cta: 0 6px 16px rgba(255, 122, 89, 0.35);
 
   /* 字体 */
-  --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
+  --font-serif: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-mono: "JetBrains Mono", "Cascadia Code", "SF Mono", Consolas, monospace;
 
@@ -149,7 +149,7 @@ input, select, textarea {
   background: transparent;
   color: var(--color-text-secondary);
 }
-.btn-ghost:hover { background: rgba(139, 94, 60, 0.06); }
+.btn-ghost:hover { background: rgba(233, 118, 123, 0.06); }
 
 .btn-block { display: flex; width: 100%; }
 
@@ -207,7 +207,7 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.12);
+  box-shadow: 0 0 0 3px rgba(233, 118, 123, 0.12);
 }
 
 input::placeholder,
@@ -242,21 +242,21 @@ textarea {
 }
 
 .chip-primary {
-  background: rgba(139, 94, 60, 0.1);
+  background: rgba(233, 118, 123, 0.1);
   color: var(--color-primary);
-  border-color: rgba(139, 94, 60, 0.2);
+  border-color: rgba(233, 118, 123, 0.2);
 }
 
 .chip-trust {
-  background: rgba(107, 142, 90, 0.12);
+  background: rgba(79, 181, 139, 0.12);
   color: var(--color-trust);
-  border-color: rgba(107, 142, 90, 0.24);
+  border-color: rgba(79, 181, 139, 0.24);
 }
 
 .chip-cta {
-  background: rgba(232, 132, 92, 0.14);
+  background: rgba(255, 122, 89, 0.14);
   color: var(--color-cta-dark);
-  border-color: rgba(232, 132, 92, 0.28);
+  border-color: rgba(255, 122, 89, 0.28);
 }
 
 /* ============ Toast ============ */
@@ -267,7 +267,7 @@ textarea {
   transform: translateX(-50%) translateY(-40px);
   padding: 12px 20px;
   border-radius: var(--radius-button);
-  background: rgba(61, 40, 23, 0.92);
+  background: rgba(74, 43, 43, 0.92);
   color: var(--color-text-inverse);
   font-size: 14px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
@@ -297,7 +297,7 @@ textarea {
   display: flex;
   align-items: center;
   padding: 0 var(--space-3);
-  background: rgba(251, 245, 238, 0.95);
+  background: rgba(255, 248, 245, 0.95);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);
 }
@@ -321,7 +321,7 @@ textarea {
   font-size: 20px;
   color: var(--color-primary);
 }
-.header-back:hover { background: rgba(139, 94, 60, 0.08); }
+.header-back:hover { background: rgba(233, 118, 123, 0.08); }
 
 /* ============ 底部 Tab 导航 ============ */
 .tabbar {
@@ -471,7 +471,7 @@ textarea {
 .tab-btn.active {
   background: var(--color-card);
   color: var(--color-primary);
-  box-shadow: 0 2px 8px rgba(139, 94, 60, 0.1);
+  box-shadow: 0 2px 8px rgba(233, 118, 123, 0.1);
 }
 
 .auth-form {
@@ -533,7 +533,7 @@ textarea {
 .my-tab.active {
   background: var(--color-card);
   color: var(--color-primary);
-  box-shadow: 0 2px 8px rgba(139, 94, 60, 0.1);
+  box-shadow: 0 2px 8px rgba(233, 118, 123, 0.1);
 }
 
 .my-content { display: none; }
@@ -632,9 +632,9 @@ textarea {
 }
 
 .chip-cursor.chip-primary {
-  background: rgba(139, 94, 60, 0.14);
+  background: rgba(233, 118, 123, 0.14);
   color: var(--color-primary);
-  border-color: rgba(139, 94, 60, 0.36);
+  border-color: rgba(233, 118, 123, 0.36);
 }
 
 /* 照片选择器 */
@@ -695,7 +695,7 @@ textarea {
 
 .photo-cover-btn {
   left: 2px;
-  background: rgba(61, 40, 23, 0.75);
+  background: rgba(74, 43, 43, 0.75);
 }
 
 .photo-del-btn {
@@ -732,7 +732,7 @@ textarea {
 .modal-mask {
   position: absolute;
   inset: 0;
-  background: rgba(61, 40, 23, 0.5);
+  background: rgba(74, 43, 43, 0.5);
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -777,7 +777,7 @@ textarea {
   cursor: pointer;
 }
 
-.modal-close:hover { background: rgba(139, 94, 60, 0.08); }
+.modal-close:hover { background: rgba(233, 118, 123, 0.08); }
 
 .modal-body {
   padding: 16px 20px 24px;
@@ -1031,8 +1031,8 @@ textarea {
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
-  background: rgba(107, 142, 90, 0.08);
-  border: 1px solid rgba(107, 142, 90, 0.25);
+  background: rgba(79, 181, 139, 0.08);
+  border: 1px solid rgba(79, 181, 139, 0.25);
   border-radius: 8px;
 }
 .cal-range-idx {
@@ -1111,7 +1111,7 @@ textarea {
   background: var(--color-bg-cream);
 }
 .filter-toggle:hover {
-  background: rgba(139, 94, 60, 0.08);
+  background: rgba(233, 118, 123, 0.08);
 }
 .filter-body {
   animation: fadeIn 0.2s ease-out;
@@ -1142,7 +1142,7 @@ textarea {
 }
 .host-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(139, 94, 60, 0.14);
+  box-shadow: 0 6px 16px rgba(233, 118, 123, 0.14);
   border-color: var(--color-border-strong);
 }
 .host-card-avatar-wrap {
@@ -1267,19 +1267,19 @@ textarea {
   line-height: 1.4;
 }
 .badge-verified {
-  background: rgba(107, 142, 90, 0.16);
+  background: rgba(79, 181, 139, 0.16);
   color: var(--color-trust-dark);
-  border: 1px solid rgba(107, 142, 90, 0.3);
+  border: 1px solid rgba(79, 181, 139, 0.3);
 }
 .badge-sponsored {
-  background: rgba(139, 94, 60, 0.14);
+  background: rgba(233, 118, 123, 0.14);
   color: var(--color-primary-dark);
-  border: 1px solid rgba(139, 94, 60, 0.28);
+  border: 1px solid rgba(233, 118, 123, 0.28);
 }
 .badge-availability {
-  background: rgba(232, 132, 92, 0.16);
+  background: rgba(255, 122, 89, 0.16);
   color: var(--color-cta-dark);
-  border: 1px solid rgba(232, 132, 92, 0.32);
+  border: 1px solid rgba(255, 122, 89, 0.32);
 }
 
 /* ============ 详情页头部卡 ============ */
@@ -1419,8 +1419,8 @@ textarea {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: rgba(107, 142, 90, 0.08);
-  border: 1px solid rgba(107, 142, 90, 0.24);
+  background: rgba(79, 181, 139, 0.08);
+  border: 1px solid rgba(79, 181, 139, 0.24);
   border-radius: 8px;
 }
 .availability-idx {
@@ -1563,7 +1563,7 @@ textarea {
   font-size: 15px;
   font-weight: 600;
   color: var(--color-primary);
-  background: rgba(139, 94, 60, 0.1);
+  background: rgba(233, 118, 123, 0.1);
   border: 1px solid var(--color-border-strong);
 }
 .review-meta {
@@ -1715,9 +1715,9 @@ textarea {
   white-space: nowrap;
 }
 .badge-need-green {
-  background: rgba(107, 142, 90, 0.15);
+  background: rgba(79, 181, 139, 0.15);
   color: #4F7040;
-  border: 1px solid rgba(107, 142, 90, 0.35);
+  border: 1px solid rgba(79, 181, 139, 0.35);
   font-size: 11px;
   padding: 3px 8px;
   border-radius: 999px;
@@ -1725,7 +1725,7 @@ textarea {
   white-space: nowrap;
 }
 .badge-need-gray {
-  background: rgba(181, 164, 143, 0.2);
+  background: rgba(201, 162, 155, 0.25);
   color: var(--color-text-muted);
   border: 1px solid var(--color-border);
   font-size: 11px;
@@ -1811,7 +1811,7 @@ textarea {
 .seg-btn.active {
   background: var(--color-card);
   color: var(--color-primary);
-  box-shadow: 0 2px 8px rgba(139, 94, 60, 0.1);
+  box-shadow: 0 2px 8px rgba(233, 118, 123, 0.1);
 }
 
 /* 订单列表容器 */
@@ -1870,9 +1870,9 @@ textarea {
   white-space: nowrap;
 }
 .badge-order-green {
-  background: rgba(107, 142, 90, 0.18);
+  background: rgba(79, 181, 139, 0.18);
   color: #4F7040;
-  border: 1px solid rgba(107, 142, 90, 0.4);
+  border: 1px solid rgba(79, 181, 139, 0.4);
   font-size: 11px;
   padding: 3px 8px;
   border-radius: 999px;
@@ -1880,9 +1880,9 @@ textarea {
   white-space: nowrap;
 }
 .badge-order-done {
-  background: rgba(85, 112, 72, 0.22);
+  background: rgba(59, 158, 116, 0.22);
   color: #3D5432;
-  border: 1px solid rgba(85, 112, 72, 0.45);
+  border: 1px solid rgba(59, 158, 116, 0.45);
   font-size: 11px;
   padding: 3px 8px;
   border-radius: 999px;
@@ -1890,7 +1890,7 @@ textarea {
   white-space: nowrap;
 }
 .badge-order-gray {
-  background: rgba(181, 164, 143, 0.2);
+  background: rgba(201, 162, 155, 0.25);
   color: var(--color-text-muted);
   border: 1px solid var(--color-border);
   font-size: 11px;
@@ -1980,7 +1980,7 @@ textarea {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(139, 94, 60, 0.1);
+  background: rgba(233, 118, 123, 0.1);
   border: 1px solid var(--color-border-strong);
   display: flex;
   align-items: center;
@@ -2009,9 +2009,9 @@ textarea {
   flex-direction: column;
   gap: 2px;
   padding: 8px 10px;
-  background: rgba(232, 132, 92, 0.08);
+  background: rgba(255, 122, 89, 0.08);
   border-radius: 8px;
-  border: 1px solid rgba(232, 132, 92, 0.2);
+  border: 1px solid rgba(255, 122, 89, 0.2);
   margin-top: 2px;
 }
 .order-amount-row {
@@ -2335,7 +2335,7 @@ textarea {
 }
 
 .notif-bell:hover {
-  background: rgba(139, 94, 60, 0.08);
+  background: rgba(233, 118, 123, 0.08);
 }
 
 .notif-bell-icon {
@@ -2370,9 +2370,9 @@ textarea {
   max-width: calc(100vw - 24px);
   max-height: 72vh;
   background: #ffffff;
-  border: 1px solid var(--color-border, rgba(139, 94, 60, 0.15));
+  border: 1px solid var(--color-border, rgba(233, 118, 123, 0.15));
   border-radius: var(--radius-card, 14px);
-  box-shadow: 0 12px 32px rgba(61, 40, 23, 0.18);
+  box-shadow: 0 12px 32px rgba(74, 43, 43, 0.18);
   z-index: 9999;
   display: flex;
   flex-direction: column;
@@ -2390,7 +2390,7 @@ textarea {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--color-border, rgba(139, 94, 60, 0.15));
+  border-bottom: 1px solid var(--color-border, rgba(233, 118, 123, 0.15));
   flex-shrink: 0;
 }
 
@@ -2413,7 +2413,7 @@ textarea {
 }
 
 .notif-read-all:hover {
-  background: rgba(139, 94, 60, 0.08);
+  background: rgba(233, 118, 123, 0.08);
   color: var(--color-primary, #8b5e3c);
 }
 
@@ -2426,7 +2426,7 @@ textarea {
 
 .notif-panel-foot {
   padding: 8px 16px 12px;
-  border-top: 1px solid var(--color-border, rgba(139, 94, 60, 0.15));
+  border-top: 1px solid var(--color-border, rgba(233, 118, 123, 0.15));
   text-align: center;
   flex-shrink: 0;
   background: rgba(251, 245, 238, 0.5);
@@ -2444,7 +2444,7 @@ textarea {
 }
 
 .notif-view-all:hover {
-  background: rgba(139, 94, 60, 0.08);
+  background: rgba(233, 118, 123, 0.08);
 }
 
 .notif-item {
@@ -2454,7 +2454,7 @@ textarea {
   padding: 10px 16px;
   cursor: pointer;
   transition: background 0.15s;
-  border-bottom: 1px solid rgba(139, 94, 60, 0.05);
+  border-bottom: 1px solid rgba(233, 118, 123, 0.05);
 }
 
 .notif-item:last-child {
@@ -2462,7 +2462,7 @@ textarea {
 }
 
 .notif-item:hover {
-  background: rgba(139, 94, 60, 0.05);
+  background: rgba(233, 118, 123, 0.05);
 }
 
 .notif-item.unread {
@@ -2501,7 +2501,7 @@ textarea {
 .notif-item-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-text, #3d2817);
+  color: var(--color-text, #4a2b2b);
   line-height: 1.4;
   white-space: nowrap;
   overflow: hidden;
@@ -2509,7 +2509,7 @@ textarea {
 }
 
 .notif-item.unread .notif-item-title {
-  color: #3d2817;
+  color: #4a2b2b;
 }
 
 .notif-item-desc {
@@ -2564,7 +2564,7 @@ textarea {
   padding: 0 4px;
   padding-bottom: env(safe-area-inset-bottom);
   z-index: 200;
-  box-shadow: 0 -2px 12px rgba(139, 94, 60, 0.08);
+  box-shadow: 0 -2px 12px rgba(233, 118, 123, 0.08);
 }
 
 .bottom-tab {
@@ -2630,7 +2630,7 @@ body.has-bottom-tabbar .cta-fixed {
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  background: rgba(251, 245, 238, 0.95);
+  background: rgba(255, 248, 245, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);
@@ -2704,24 +2704,27 @@ body.has-bottom-tabbar .cta-fixed {
 
 /* ---- 首页：Hero ---- */
 .home-hero {
-  padding: 28px 20px 22px;
+  padding: 34px 20px 30px;
   text-align: center;
-  background: linear-gradient(135deg, rgba(232, 132, 92, 0.10) 0%, rgba(139, 94, 60, 0.06) 100%);
-  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(150deg, #FFB1A3 0%, #F97C7C 62%, #F76E8E 100%);
+  border-radius: 0 0 28px 28px;
+  color: #fff;
+  box-shadow: 0 10px 28px rgba(249, 124, 124, 0.28);
 }
 
 .home-hero-title {
   font-family: var(--font-serif);
   font-size: 28px;
   font-weight: 700;
-  color: var(--color-primary);
+  color: #fff;
   line-height: 1.25;
   margin-bottom: 10px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
 .home-hero-sub {
   font-size: 14px;
-  color: var(--color-text-secondary);
+  color: rgba(255, 255, 255, 0.92);
   margin-bottom: 18px;
 }
 
@@ -2735,6 +2738,13 @@ body.has-bottom-tabbar .cta-fixed {
 
 .home-cta .btn {
   font-size: 15px;
+}
+
+.home-hero .btn-secondary {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--color-cta-dark);
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* ---- 首页：搜索栏 ---- */
@@ -2824,7 +2834,7 @@ body.has-bottom-tabbar .cta-fixed {
 }
 
 .home-stat-highlight {
-  background: rgba(232, 132, 92, 0.10);
+  background: rgba(255, 122, 89, 0.10);
 }
 
 .home-stat-highlight .home-stat-num {
@@ -3020,8 +3030,8 @@ body.has-bottom-tabbar .cta-fixed {
   padding: 12px 32px;
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(139, 94, 60, 0.12);
-  box-shadow: 0 2px 8px rgba(139, 94, 60, 0.04);
+  border-bottom: 1px solid rgba(233, 118, 123, 0.12);
+  box-shadow: 0 2px 8px rgba(233, 118, 123, 0.04);
 }
 .desktop-nav-brand {
   display: flex;
@@ -3055,7 +3065,7 @@ body.has-bottom-tabbar .cta-fixed {
   transition: background 0.15s, color 0.15s;
 }
 .desktop-nav-link:hover {
-  background: rgba(139, 94, 60, 0.08);
+  background: rgba(233, 118, 123, 0.08);
   color: var(--color-primary);
 }
 .desktop-nav-cta {
@@ -3071,7 +3081,7 @@ body.has-bottom-tabbar .cta-fixed {
   font-size: 14px;
   color: var(--color-text-muted);
   padding: 6px 10px;
-  background: rgba(139, 94, 60, 0.06);
+  background: rgba(233, 118, 123, 0.06);
   border-radius: 999px;
 }
 .desktop-nav-logout {
@@ -3107,13 +3117,13 @@ body.has-bottom-tabbar .cta-fixed {
   padding: 16px;
   border-radius: var(--radius-card);
   background: #FFF7EE;
-  border: 1px solid rgba(139, 94, 60, 0.12);
+  border: 1px solid rgba(233, 118, 123, 0.12);
   margin-bottom: 12px;
   align-items: flex-start;
 }
 .sponsor-card.accepted {
   background: linear-gradient(135deg, #EEF5E8 0%, #F5F9EE 100%);
-  border-color: rgba(107, 142, 90, 0.3);
+  border-color: rgba(79, 181, 139, 0.3);
 }
 .sponsor-card.pending {
   background: #FBF5EE;
@@ -3273,7 +3283,7 @@ body.has-bottom-tabbar .cta-fixed {
   gap: 8px;
 }
 .badge-bl-pending {
-  background: rgba(232, 132, 92, 0.12);
+  background: rgba(255, 122, 89, 0.12);
   color: #C25E3E;
 }
 .badge-bl-confirmed {
@@ -3281,8 +3291,8 @@ body.has-bottom-tabbar .cta-fixed {
   color: #C94C4C;
 }
 .badge-bl-dismissed {
-  background: rgba(107, 142, 90, 0.16);
-  color: #6B8E5A;
+  background: rgba(79, 181, 139, 0.16);
+  color: #3B9E74;
 }
 
 /* 举报弹窗 */
@@ -3365,13 +3375,13 @@ body.has-bottom-tabbar .cta-fixed {
 }
 .need-square-card.need-card-highlight {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.25), 0 6px 20px rgba(139, 94, 60, 0.15);
+  box-shadow: 0 0 0 2px rgba(233, 118, 123, 0.25), 0 6px 20px rgba(233, 118, 123, 0.15);
   animation: needHighlightPulse 1.5s ease-out 2;
 }
 @keyframes needHighlightPulse {
-  0%   { box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.4), 0 0 0 0 rgba(139, 94, 60, 0.3); }
-  70%  { box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.25), 0 0 0 12px rgba(139, 94, 60, 0); }
-  100% { box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.25), 0 0 0 0 rgba(139, 94, 60, 0); }
+  0%   { box-shadow: 0 0 0 2px rgba(233, 118, 123, 0.4), 0 0 0 0 rgba(233, 118, 123, 0.3); }
+  70%  { box-shadow: 0 0 0 2px rgba(233, 118, 123, 0.25), 0 0 0 12px rgba(233, 118, 123, 0); }
+  100% { box-shadow: 0 0 0 2px rgba(233, 118, 123, 0.25), 0 0 0 0 rgba(233, 118, 123, 0); }
 }
 .need-square-card.need-card-done {
   opacity: 0.7;
@@ -3429,8 +3439,8 @@ body.has-bottom-tabbar .cta-fixed {
   padding: 8px 16px;
   font-size: 14px;
   color: #4F7040;
-  background: rgba(107, 142, 90, 0.15);
-  border: 1px solid rgba(107, 142, 90, 0.35);
+  background: rgba(79, 181, 139, 0.15);
+  border: 1px solid rgba(79, 181, 139, 0.35);
   border-radius: 999px;
   font-weight: 600;
   width: 100%;
@@ -3506,12 +3516,12 @@ body.has-bottom-tabbar .cta-fixed {
 .seg-btn-large-active {
   background: var(--color-card);
   color: var(--color-primary);
-  box-shadow: 0 2px 8px rgba(139, 94, 60, 0.15);
+  box-shadow: 0 2px 8px rgba(233, 118, 123, 0.15);
   font-weight: 600;
 }
 .seg-btn-large:hover:not(.seg-btn-large-active) {
   color: var(--color-primary);
-  background: rgba(139, 94, 60, 0.05);
+  background: rgba(233, 118, 123, 0.05);
 }
 
 /* ============ index.html 寄养人接单入口卡 ============ */
@@ -3522,8 +3532,8 @@ body.has-bottom-tabbar .cta-fixed {
   margin: 20px auto;
   max-width: 640px;
   padding: 16px;
-  background: linear-gradient(135deg, rgba(139, 94, 60, 0.06), rgba(232, 168, 56, 0.04));
-  border: 1px solid rgba(139, 94, 60, 0.2);
+  background: linear-gradient(135deg, rgba(233, 118, 123, 0.06), rgba(232, 168, 56, 0.04));
+  border: 1px solid rgba(233, 118, 123, 0.2);
 }
 .home-entry-icon {
   font-size: 30px;
@@ -3570,7 +3580,7 @@ body.has-bottom-tabbar .cta-fixed {
 }
 .invite-need-item:hover {
   border-color: var(--color-primary);
-  background: rgba(139, 94, 60, 0.04);
+  background: rgba(233, 118, 123, 0.04);
   transform: translateX(2px);
 }
 .invite-need-icon {
