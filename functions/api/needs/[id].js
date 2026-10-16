@@ -67,7 +67,7 @@ function serializeNeed(row) {
   };
 }
 
-// 公共查询（JOIN pets + owner）
+// 公共查询（JOIN wh_pets + owner）
 async function fetchNeed(env, id) {
   return await env.DB.prepare(
     `SELECT n.*,
@@ -75,9 +75,9 @@ async function fetchNeed(env, id) {
             p.gender AS pet_gender, p.age AS pet_age, p.cover_key AS pet_cover_key,
             u.nickname AS owner_nickname,
             u.banned AS owner_banned
-     FROM needs n
-     LEFT JOIN pets p ON n.pet_id = p.id
-     LEFT JOIN users u ON n.owner_id = u.id
+     FROM wh_needs n
+     LEFT JOIN wh_pets p ON n.pet_id = p.id
+     LEFT JOIN wh_users u ON n.owner_id = u.id
      WHERE n.id = ?`
   ).bind(id).first();
 }
@@ -151,7 +151,7 @@ export async function onRequestPut({ request, env, params }) {
 
   const ts = now();
   await env.DB.prepare(
-    `UPDATE needs SET
+    `UPDATE wh_needs SET
        start_date = ?, end_date = ?,
        expected_area = ?, expected_price_cents = ?, description = ?,
        updated_at = ?
@@ -186,7 +186,7 @@ export async function onRequestDelete({ request, env, params }) {
   // 其他状态（open / expired）都软取消
   const ts = now();
   await env.DB.prepare(
-    "UPDATE needs SET status = 'cancelled', updated_at = ? WHERE id = ?"
+    "UPDATE wh_needs SET status = 'cancelled', updated_at = ? WHERE id = ?"
   ).bind(ts, id).run();
 
   return json({ success: true, status: "cancelled" });

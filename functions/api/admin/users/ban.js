@@ -35,7 +35,7 @@ export async function onRequestPost({ request, env }) {
 
   // 目标用户存在性 + 保护检查
   const target = await env.DB.prepare(
-    "SELECT id, role, banned FROM users WHERE id = ?"
+    "SELECT id, role, banned FROM wh_users WHERE id = ?"
   ).bind(targetId).first();
   if (!target) return fail("用户不存在", 404);
 
@@ -50,13 +50,13 @@ export async function onRequestPost({ request, env }) {
   const ts = now();
 
   await env.DB.prepare(
-    "UPDATE users SET banned = ?, updated_at = ? WHERE id = ?"
+    "UPDATE wh_users SET banned = ?, updated_at = ? WHERE id = ?"
   ).bind(banned, ts, targetId).run();
 
   // Ban 时强制下线：删除该用户全部 sessions
   if (banned === 1) {
     await env.DB.prepare(
-      "DELETE FROM sessions WHERE user_id = ?"
+      "DELETE FROM wh_sessions WHERE user_id = ?"
     ).bind(targetId).run();
 
     // 通知（用户被 Ban 后无法登录，通知仅存档；未来若解封可查看）

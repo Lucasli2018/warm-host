@@ -8,7 +8,7 @@
 //
 // 副作用:
 //   - INSERT host_profiles（表单数据）
-//   - UPDATE users SET is_host=1, host_status='pending'
+//   - UPDATE wh_users SET is_host=1, host_status='pending'
 //   - 任一失败回滚（DELETE profile）
 //
 // 返回: { success: true, hostStatus: 'pending' }
@@ -114,7 +114,7 @@ export async function onRequestPost({ request, env }) {
   // （此处会 upsert profile + reset host_status）
   // 先查是否已有 profile
   const existing = await env.DB.prepare(
-    "SELECT id, user_id FROM host_profiles WHERE user_id = ?"
+    "SELECT id, user_id FROM wh_host_profiles WHERE user_id = ?"
   ).bind(user.id).first();
 
   // 校验字段
@@ -129,7 +129,7 @@ export async function onRequestPost({ request, env }) {
       // 更新已有 profile
       profileId = existing.id;
       await env.DB.prepare(
-        `UPDATE host_profiles SET
+        `UPDATE wh_host_profiles SET
            bio = ?, capacity_count = ?, capacity_species = ?, capacity_size = ?,
            capacity_gender = ?, address_fuzzy = ?, district = ?, experience = ?,
            special_services = ?, daily_rate_cents = ?, updated_at = ?
@@ -144,7 +144,7 @@ export async function onRequestPost({ request, env }) {
       // 新建 profile
       profileId = crypto.randomUUID();
       await env.DB.prepare(
-        `INSERT INTO host_profiles (
+        `INSERT INTO wh_host_profiles (
            id, user_id, bio, capacity_count, capacity_species, capacity_size,
            capacity_gender, address_fuzzy, district, experience,
            special_services, daily_rate_cents, created_at, updated_at
@@ -159,13 +159,13 @@ export async function onRequestPost({ request, env }) {
 
     // 更新 users: is_host=1, host_status='pending'
     await env.DB.prepare(
-      "UPDATE users SET is_host = 1, host_status = 'pending', updated_at = ? WHERE id = ?"
+      "UPDATE wh_users SET is_host = 1, host_status = 'pending', updated_at = ? WHERE id = ?"
     ).bind(ts, user.id).run();
   } catch (err) {
     // 回滚 profile（若已创建/更新）
     if (profileId) {
       try {
-        await env.DB.prepare("DELETE FROM host_profiles WHERE id = ?").bind(profileId).run();
+        await env.DB.prepare("DELETE FROM wh_host_profiles WHERE id = ?").bind(profileId).run();
       } catch {}
     }
     return fail("提交失败，请重试", 500);

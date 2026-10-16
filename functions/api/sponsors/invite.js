@@ -33,7 +33,7 @@ export async function onRequestPost({ request, env }) {
       return fail("手机号格式不正确", 400);
     }
     const byPhone = await env.DB.prepare(
-      "SELECT id FROM users WHERE phone = ?"
+      "SELECT id FROM wh_users WHERE phone = ?"
     ).bind(sponsorPhone).first();
     if (!byPhone) return fail("该手机号未注册", 404);
     sponsorUserId = byPhone.id;
@@ -45,7 +45,7 @@ export async function onRequestPost({ request, env }) {
 
   // 目标用户
   const targetUser = await env.DB.prepare(
-    "SELECT id, nickname, host_status, banned FROM users WHERE id = ?"
+    "SELECT id, nickname, host_status, banned FROM wh_users WHERE id = ?"
   ).bind(sponsorUserId).first();
   if (!targetUser) return fail("目标用户不存在", 404);
   if (targetUser.banned) return fail("该用户已被封禁", 400);
@@ -55,7 +55,7 @@ export async function onRequestPost({ request, env }) {
 
   // 完成订单数
   const orderCount = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM orders WHERE host_id = ? AND status = 'completed'"
+    "SELECT COUNT(*) AS c FROM wh_orders WHERE host_id = ? AND status = 'completed'"
   ).bind(targetUser.id).first();
   const completedOrders = orderCount && orderCount.c ? Number(orderCount.c) : 0;
   if (completedOrders < MIN_COMPLETED_ORDERS) {
@@ -64,7 +64,7 @@ export async function onRequestPost({ request, env }) {
 
   // 目标 profile + 评分
   const targetProfile = await env.DB.prepare(
-    "SELECT id, avg_rating, total_reviews FROM host_profiles WHERE user_id = ?"
+    "SELECT id, avg_rating, total_reviews FROM wh_host_profiles WHERE user_id = ?"
   ).bind(targetUser.id).first();
   if (!targetProfile) {
     return fail("担保人评分需 ≥ 4.5", 400);
@@ -76,7 +76,7 @@ export async function onRequestPost({ request, env }) {
 
   // 自己的 profile（查 is_sponsored + profileId）
   const myProfile = await env.DB.prepare(
-    "SELECT id, is_sponsored FROM host_profiles WHERE user_id = ?"
+    "SELECT id, is_sponsored FROM wh_host_profiles WHERE user_id = ?"
   ).bind(user.id).first();
   if (!myProfile) return fail("寄养人档案不存在", 404);
   if (myProfile.is_sponsored) {
@@ -85,7 +85,7 @@ export async function onRequestPost({ request, env }) {
 
   // 重复邀请检查（同一 sponsor↔sponsored 对已存在）
   const existing = await env.DB.prepare(
-    "SELECT id FROM sponsors WHERE sponsor_id = ? AND sponsored_host_id = ?"
+    "SELECT id FROM wh_sponsors WHERE sponsor_id = ? AND sponsored_host_id = ?"
   ).bind(sponsorUserId, myProfile.id).first();
   if (existing) {
     return fail("已发送过邀请，等待对方接受", 400);
@@ -95,7 +95,7 @@ export async function onRequestPost({ request, env }) {
   const ts = now();
 
   await env.DB.prepare(
-    "INSERT INTO sponsors (id, sponsor_id, sponsored_host_id, created_at) VALUES (?, ?, ?, ?)"
+    "INSERT INTO wh_sponsors (id, sponsor_id, sponsored_host_id, created_at) VALUES (?, ?, ?, ?)"
   ).bind(id, sponsorUserId, myProfile.id, ts).run();
 
   // 通知担保人

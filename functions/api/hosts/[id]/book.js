@@ -29,7 +29,7 @@ export async function onRequestPost({ request, env, params }) {
 
   // 确认 params.id 是当前用户的寄养档案
   const hostProfile = await env.DB.prepare(
-    "SELECT id, user_id, is_sponsored, capacity_count FROM host_profiles WHERE id = ?"
+    "SELECT id, user_id, is_sponsored, capacity_count FROM wh_host_profiles WHERE id = ?"
   ).bind(params.id).first();
   if (!hostProfile) return fail("寄养人不存在", 404);
   if (hostProfile.user_id !== user.id) return fail("无权为该寄养人接单", 403);
@@ -40,7 +40,7 @@ export async function onRequestPost({ request, env, params }) {
   }
 
   // 需求校验
-  const need = await env.DB.prepare("SELECT * FROM needs WHERE id = ?").bind(needId).first();
+  const need = await env.DB.prepare("SELECT * FROM wh_needs WHERE id = ?").bind(needId).first();
   if (!need) return fail("需求不存在", 404);
   if (need.status !== "open") {
     // matched = 已有寄养人接单（并发/重复接单）→ 409；其它终态 → 400
@@ -57,7 +57,7 @@ export async function onRequestPost({ request, env, params }) {
 
   // 时间覆盖校验：needs 区间必须被某个 active availability 区间完整覆盖
   const coverage = await env.DB.prepare(
-    `SELECT COUNT(*) AS c FROM host_availability
+    `SELECT COUNT(*) AS c FROM wh_host_availability
      WHERE host_id = ? AND active = 1 AND start_date <= ? AND end_date >= ?`
   ).bind(params.id, need.start_date, need.end_date).first();
   if (!coverage || Number(coverage.c) === 0) {
@@ -71,10 +71,10 @@ export async function onRequestPost({ request, env, params }) {
 
   // 原子插入防并发重复接单
   const insert = await env.DB.prepare(
-    `INSERT INTO orders (id, need_id, owner_id, host_id, pet_id, start_date, end_date, duration_days, total_price_cents, status, created_at, updated_at)
+    `INSERT INTO wh_orders (id, need_id, owner_id, host_id, pet_id, start_date, end_date, duration_days, total_price_cents, status, created_at, updated_at)
      SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?
      WHERE NOT EXISTS (
-       SELECT 1 FROM orders WHERE need_id = ? AND status IN ('pending', 'accepted', 'in_progress', 'completed')
+       SELECT 1 FROM wh_orders WHERE need_id = ? AND status IN ('pending', 'accepted', 'in_progress', 'completed')
      )`
   ).bind(
     orderId, need.id, need.owner_id, user.id, need.pet_id,
@@ -85,7 +85,7 @@ export async function onRequestPost({ request, env, params }) {
     return fail("该需求已有寄养人接单，请刷新列表", 409);
   }
 
-  await env.DB.prepare("UPDATE needs SET status = 'matched', updated_at = ? WHERE id = ?")
+  await env.DB.prepare("UPDATE wh_needs SET status = 'matched', updated_at = ? WHERE id = ?")
     .bind(ts, need.id).run();
 
   await createNotification(env, {
@@ -96,6 +96,6 @@ export async function onRequestPost({ request, env, params }) {
     link: `/my.html?tab=orders&order=${orderId}`,
   });
 
-  const order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?").bind(orderId).first();
+  const order = await env.DB.prepare("SELECT * FROM wh_orders WHERE id = ?").bind(orderId).first();
   return json({ id: order.id, status: "pending", needId: order.need_id, durationDays: order.duration_days, totalPriceCents: order.total_price_cents });
 }

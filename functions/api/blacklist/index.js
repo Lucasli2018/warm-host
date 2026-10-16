@@ -64,13 +64,13 @@ export async function onRequestPost({ request, env }) {
       return fail("手机号格式不正确", 400);
     }
     const byPhone = await env.DB.prepare(
-      "SELECT id FROM users WHERE phone = ?"
+      "SELECT id FROM wh_users WHERE phone = ?"
     ).bind(targetPhone).first();
     if (!byPhone) return fail("该手机号未注册", 404);
     targetUserId = byPhone.id;
   } else if (!targetUserId && targetNickname) {
     const byName = await env.DB.prepare(
-      "SELECT id FROM users WHERE nickname = ?"
+      "SELECT id FROM wh_users WHERE nickname = ?"
     ).bind(targetNickname).first();
     if (!byName) return fail("该昵称未找到用户", 404);
     targetUserId = byName.id;
@@ -95,21 +95,21 @@ export async function onRequestPost({ request, env }) {
 
   // 目标用户存在性 + admin 保护
   const target = await env.DB.prepare(
-    "SELECT id, role, banned, nickname FROM users WHERE id = ?"
+    "SELECT id, role, banned, nickname FROM wh_users WHERE id = ?"
   ).bind(targetUserId).first();
   if (!target) return fail("目标用户不存在", 404);
   if (target.role === "admin") return fail("不能举报 admin", 400);
 
   // 去重：同一 reporter 对同一 target 在 pending 状态只能举报一次
   const dup = await env.DB.prepare(
-    "SELECT id FROM blacklist WHERE reporter_id = ? AND target_user_id = ? AND status = 'pending'"
+    "SELECT id FROM wh_blacklist WHERE reporter_id = ? AND target_user_id = ? AND status = 'pending'"
   ).bind(user.id, targetUserId).first();
   if (dup) return fail("您已举报过该用户，请等待处理", 400);
 
   const id = crypto.randomUUID();
   const ts = now();
   await env.DB.prepare(
-    `INSERT INTO blacklist (id, reporter_id, target_user_id, target_type, category, details, status, created_at)
+    `INSERT INTO wh_blacklist (id, reporter_id, target_user_id, target_type, category, details, status, created_at)
      VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`
   ).bind(id, user.id, targetUserId, targetType, category, details, ts).run();
 
@@ -123,7 +123,7 @@ export async function onRequestPost({ request, env }) {
   });
 
   // 通知所有 admin
-  const admins = await env.DB.prepare("SELECT id FROM users WHERE role = 'admin'").all();
+  const admins = await env.DB.prepare("SELECT id FROM wh_users WHERE role = 'admin'").all();
   for (const a of (admins.results || [])) {
     await createNotification(env, {
       userId: a.id,
@@ -151,16 +151,16 @@ export async function onRequestGet({ request, env }) {
   const { results } = await env.DB.prepare(
     `SELECT b.id, b.category, b.status, b.created_at, b.handled_at,
             u.id AS target_user_id, u.nickname, u.phone
-     FROM blacklist b
-     JOIN users u ON b.target_user_id = u.id
+     FROM wh_blacklist b
+     JOIN wh_users u ON b.target_user_id = u.id
      WHERE b.status = 'confirmed' AND u.banned = 1
      ORDER BY b.handled_at DESC, b.created_at DESC
      LIMIT ? OFFSET ?`
   ).bind(pageSize, offset).all();
 
   const totalRow = await env.DB.prepare(
-    `SELECT COUNT(*) AS c FROM blacklist b
-     JOIN users u ON b.target_user_id = u.id
+    `SELECT COUNT(*) AS c FROM wh_blacklist b
+     JOIN wh_users u ON b.target_user_id = u.id
      WHERE b.status = 'confirmed' AND u.banned = 1`
   ).first();
 

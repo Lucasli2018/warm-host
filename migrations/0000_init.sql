@@ -6,7 +6,7 @@
 -- ============================================================
 -- 3.1 users
 -- ============================================================
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS wh_users (
   id TEXT PRIMARY KEY,
   phone TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- ============================================================
 -- 3.2 host_profiles
 -- ============================================================
-CREATE TABLE IF NOT EXISTS host_profiles (
+CREATE TABLE IF NOT EXISTS wh_host_profiles (
   id TEXT PRIMARY KEY,
   user_id TEXT UNIQUE NOT NULL,
   bio TEXT,
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS host_profiles (
 -- ============================================================
 -- 3.3 host_availability
 -- ============================================================
-CREATE TABLE IF NOT EXISTS host_availability (
+CREATE TABLE IF NOT EXISTS wh_host_availability (
   id TEXT PRIMARY KEY,
   host_id TEXT NOT NULL,
   start_date TEXT NOT NULL,
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS host_availability (
 -- ============================================================
 -- 3.4 pets
 -- ============================================================
-CREATE TABLE IF NOT EXISTS pets (
+CREATE TABLE IF NOT EXISTS wh_pets (
   id TEXT PRIMARY KEY,
   owner_id TEXT NOT NULL,
   name TEXT NOT NULL,
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS pets (
 -- ============================================================
 -- 3.5 needs（寄养需求）
 -- ============================================================
-CREATE TABLE IF NOT EXISTS needs (
+CREATE TABLE IF NOT EXISTS wh_needs (
   id TEXT PRIMARY KEY,
   owner_id TEXT NOT NULL,
   pet_id TEXT NOT NULL,
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS needs (
 -- ============================================================
 -- 3.6 orders（撮合后的订单）
 -- ============================================================
-CREATE TABLE IF NOT EXISTS orders (
+CREATE TABLE IF NOT EXISTS wh_orders (
   id TEXT PRIMARY KEY,
   need_id TEXT NOT NULL,
   owner_id TEXT NOT NULL,
@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS orders (
 -- ============================================================
 -- 3.7 reviews
 -- ============================================================
-CREATE TABLE IF NOT EXISTS reviews (
+CREATE TABLE IF NOT EXISTS wh_reviews (
   id TEXT PRIMARY KEY,
   order_id TEXT UNIQUE NOT NULL,
   reviewer_id TEXT NOT NULL,
@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS reviews (
 -- ============================================================
 -- 3.8 blacklist
 -- ============================================================
-CREATE TABLE IF NOT EXISTS blacklist (
+CREATE TABLE IF NOT EXISTS wh_blacklist (
   id TEXT PRIMARY KEY,
   reporter_id TEXT NOT NULL,
   target_user_id TEXT NOT NULL,
@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS blacklist (
 -- ============================================================
 -- 3.9 sponsors
 -- ============================================================
-CREATE TABLE IF NOT EXISTS sponsors (
+CREATE TABLE IF NOT EXISTS wh_sponsors (
   id TEXT PRIMARY KEY,
   sponsor_id TEXT NOT NULL,
   sponsored_host_id TEXT NOT NULL,
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS sponsors (
 -- ============================================================
 -- 3.10 notifications
 -- ============================================================
-CREATE TABLE IF NOT EXISTS notifications (
+CREATE TABLE IF NOT EXISTS wh_notifications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   type TEXT NOT NULL,
@@ -188,7 +188,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- ============================================================
 -- 3.11 invite_codes
 -- ============================================================
-CREATE TABLE IF NOT EXISTS invite_codes (
+CREATE TABLE IF NOT EXISTS wh_invite_codes (
   code TEXT PRIMARY KEY,
   owner_id TEXT,
   used_by TEXT,
@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS invite_codes (
 -- ============================================================
 -- 3.12 sessions
 -- ============================================================
-CREATE TABLE IF NOT EXISTS sessions (
+CREATE TABLE IF NOT EXISTS wh_sessions (
   token TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   created_at TEXT NOT NULL,
@@ -209,28 +209,28 @@ CREATE TABLE IF NOT EXISTS sessions (
 -- ============================================================
 -- 索引
 -- ============================================================
-CREATE INDEX IF NOT EXISTS idx_host_availability_host_date
-  ON host_availability(host_id, start_date, end_date);
-CREATE INDEX IF NOT EXISTS idx_needs_status_date
-  ON needs(status, start_date);
-CREATE INDEX IF NOT EXISTS idx_needs_owner
-  ON needs(owner_id);
-CREATE INDEX IF NOT EXISTS idx_orders_owner
-  ON orders(owner_id);
-CREATE INDEX IF NOT EXISTS idx_orders_host
-  ON orders(host_id);
-CREATE INDEX IF NOT EXISTS idx_orders_status
-  ON orders(status);
-CREATE INDEX IF NOT EXISTS idx_reviews_reviewee_created
-  ON reviews(reviewee_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_notifications_user_read
-  ON notifications(user_id, read);
-CREATE INDEX IF NOT EXISTS idx_blacklist_status ON blacklist(status);
-CREATE INDEX IF NOT EXISTS idx_blacklist_reporter ON blacklist(reporter_id);
-CREATE INDEX IF NOT EXISTS idx_blacklist_target ON blacklist(target_user_id);
-CREATE INDEX IF NOT EXISTS idx_blacklist_reporter_target_status
-  ON blacklist(reporter_id, target_user_id, status);
-CREATE INDEX IF NOT EXISTS idx_invite_codes_owner
-  ON invite_codes(owner_id);
-CREATE INDEX IF NOT EXISTS idx_invite_codes_used_by
-  ON invite_codes(used_by);
+CREATE INDEX IF NOT EXISTS wh_idx_host_availability_host_date
+  ON wh_host_availability(host_id, start_date, end_date);
+CREATE INDEX IF NOT EXISTS wh_idx_needs_status_date
+  ON wh_needs(status, start_date);
+CREATE INDEX IF NOT EXISTS wh_idx_needs_owner
+  ON wh_needs(owner_id);
+CREATE INDEX IF NOT EXISTS wh_idx_orders_owner
+  ON wh_orders(owner_id);
+CREATE INDEX IF NOT EXISTS wh_idx_orders_host
+  ON wh_orders(host_id);
+CREATE INDEX IF NOT EXISTS wh_idx_orders_status
+  ON wh_orders(status);
+CREATE INDEX IF NOT EXISTS wh_idx_reviews_reviewee_created
+  ON wh_reviews(reviewee_id, created_at);
+CREATE INDEX IF NOT EXISTS wh_idx_notifications_user_read
+  ON wh_notifications(user_id, read);
+CREATE INDEX IF NOT EXISTS wh_idx_blacklist_status ON wh_blacklist(status);
+CREATE INDEX IF NOT EXISTS wh_idx_blacklist_reporter ON wh_blacklist(reporter_id);
+CREATE INDEX IF NOT EXISTS wh_idx_blacklist_target ON wh_blacklist(target_user_id);
+CREATE INDEX IF NOT EXISTS wh_idx_blacklist_reporter_target_status
+  ON wh_blacklist(reporter_id, target_user_id, status);
+CREATE INDEX IF NOT EXISTS wh_idx_invite_codes_owner
+  ON wh_invite_codes(owner_id);
+CREATE INDEX IF NOT EXISTS wh_idx_invite_codes_used_by
+  ON wh_invite_codes(used_by);

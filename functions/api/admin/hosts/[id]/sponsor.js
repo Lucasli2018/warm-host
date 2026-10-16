@@ -16,19 +16,19 @@ export async function onRequestPost({ request, env, params }) {
   const ts = now();
 
   // 取目标用户 + 寄养人档案
-  const targetUser = await env.DB.prepare("SELECT id, nickname, host_status, banned FROM users WHERE id = ?")
+  const targetUser = await env.DB.prepare("SELECT id, nickname, host_status, banned FROM wh_users WHERE id = ?")
     .bind(params.id).first();
   if (!targetUser) return fail("寄养人不存在", 404);
 
   const profile = await env.DB.prepare(
-    "SELECT id, user_id, is_sponsored, sponsored_by FROM host_profiles WHERE user_id = ?"
+    "SELECT id, user_id, is_sponsored, sponsored_by FROM wh_host_profiles WHERE user_id = ?"
   ).bind(targetUser.id).first();
   if (!profile) return fail("该用户无寄养人档案", 404);
 
   // 清除担保（测试用）
   if (body && body.clear === true) {
-    await env.DB.prepare("DELETE FROM sponsors WHERE sponsored_host_id = ?").bind(profile.id).run();
-    await env.DB.prepare("UPDATE host_profiles SET is_sponsored = 0, sponsored_by = NULL, updated_at = ? WHERE id = ?")
+    await env.DB.prepare("DELETE FROM wh_sponsors WHERE sponsored_host_id = ?").bind(profile.id).run();
+    await env.DB.prepare("UPDATE wh_host_profiles SET is_sponsored = 0, sponsored_by = NULL, updated_at = ? WHERE id = ?")
       .bind(ts, profile.id).run();
     return json({ success: true, isSponsored: false });
   }
@@ -37,7 +37,7 @@ export async function onRequestPost({ request, env, params }) {
   if (!sponsorUserId) return fail("缺少 sponsorUserId", 400);
   if (sponsorUserId === profile.user_id) return fail("不能自己担保自己", 400);
 
-  const sponsor = await env.DB.prepare("SELECT id, nickname, host_status, banned FROM users WHERE id = ?")
+  const sponsor = await env.DB.prepare("SELECT id, nickname, host_status, banned FROM wh_users WHERE id = ?")
     .bind(sponsorUserId).first();
   if (!sponsor) return fail("担保人不存在", 404);
   if (sponsor.banned) return fail("担保人已被封禁", 400);
@@ -50,11 +50,11 @@ export async function onRequestPost({ request, env, params }) {
 
   // 写入 sponsors 表
   await env.DB.prepare(
-    "INSERT INTO sponsors (id, sponsor_id, sponsored_host_id, created_at) VALUES (?, ?, ?, ?)"
+    "INSERT INTO wh_sponsors (id, sponsor_id, sponsored_host_id, created_at) VALUES (?, ?, ?, ?)"
   ).bind(crypto.randomUUID(), sponsor.id, profile.id, ts).run();
 
   await env.DB.prepare(
-    "UPDATE host_profiles SET is_sponsored = 1, sponsored_by = ?, updated_at = ? WHERE id = ?"
+    "UPDATE wh_host_profiles SET is_sponsored = 1, sponsored_by = ?, updated_at = ? WHERE id = ?"
   ).bind(sponsor.id, ts, profile.id).run();
 
   await createNotification(env, {

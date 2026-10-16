@@ -16,17 +16,17 @@ export async function onRequestGet({ request, env }) {
   if (user.role !== "admin") return fail("仅 admin 可访问", 403);
 
   const totalRow = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM invite_codes"
+    "SELECT COUNT(*) AS c FROM wh_invite_codes"
   ).first();
   const usedRow = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM invite_codes WHERE used_by IS NOT NULL"
+    "SELECT COUNT(*) AS c FROM wh_invite_codes WHERE used_by IS NOT NULL"
   ).first();
   const total = totalRow && totalRow.c ? totalRow.c : 0;
   const used = usedRow && usedRow.c ? usedRow.c : 0;
   const available = total - used;
 
   const { results } = await env.DB.prepare(
-    "SELECT code, created_at FROM invite_codes WHERE used_by IS NULL ORDER BY created_at DESC LIMIT 50"
+    "SELECT code, created_at FROM wh_invite_codes WHERE used_by IS NULL ORDER BY created_at DESC LIMIT 50"
   ).all();
 
   return json({
@@ -59,10 +59,10 @@ export async function onRequestPost({ request, env }) {
       code = generateInviteCode();
       attempts++;
     } while (attempts < 5 && await env.DB.prepare(
-      "SELECT code FROM invite_codes WHERE code = ?"
+      "SELECT code FROM wh_invite_codes WHERE code = ?"
     ).bind(code).first());
     await env.DB.prepare(
-      "INSERT INTO invite_codes (code, owner_id, created_at) VALUES (?, ?, ?)"
+      "INSERT INTO wh_invite_codes (code, owner_id, created_at) VALUES (?, ?, ?)"
     ).bind(code, null, ts).run();
     codes.push(code);
   }

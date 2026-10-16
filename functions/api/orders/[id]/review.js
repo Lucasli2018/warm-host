@@ -42,7 +42,7 @@ export async function onRequestPost({ request, env, params }) {
   const orderId = params && params.id ? String(params.id).trim() : "";
   if (!orderId) return fail("缺少订单 ID", 400);
 
-  const order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?").bind(orderId).first();
+  const order = await env.DB.prepare("SELECT * FROM wh_orders WHERE id = ?").bind(orderId).first();
   if (!order) return fail("订单不存在", 404);
 
   const isOwner = order.owner_id === user.id;
@@ -55,7 +55,7 @@ export async function onRequestPost({ request, env, params }) {
 
   // 防重复
   const existing = await env.DB.prepare(
-    "SELECT id FROM reviews WHERE order_id = ?"
+    "SELECT id FROM wh_reviews WHERE order_id = ?"
   ).bind(orderId).first();
   if (existing) return fail("该订单已评价", 400);
 
@@ -119,7 +119,7 @@ export async function onRequestPost({ request, env, params }) {
 
   try {
     await env.DB.prepare(
-      `INSERT INTO reviews (id, order_id, reviewer_id, reviewee_id, rating, content, tags, photos, created_at)
+      `INSERT INTO wh_reviews (id, order_id, reviewer_id, reviewee_id, rating, content, tags, photos, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       id,
@@ -145,7 +145,7 @@ export async function onRequestPost({ request, env, params }) {
   const revieweeIsHost = isOwner;
   if (revieweeIsHost) {
     const profile = await env.DB.prepare(
-      "SELECT id, avg_rating, total_reviews FROM host_profiles WHERE user_id = ?"
+      "SELECT id, avg_rating, total_reviews FROM wh_host_profiles WHERE user_id = ?"
     ).bind(revieweeId).first();
     if (profile) {
       const prevAvg = Number(profile.avg_rating) || 0;
@@ -153,7 +153,7 @@ export async function onRequestPost({ request, env, params }) {
       const newTotal = prevTotal + 1;
       const newAvg = Math.round((prevAvg * prevTotal + rating) / newTotal * 100) / 100;
       await env.DB.prepare(
-        "UPDATE host_profiles SET avg_rating = ?, total_reviews = ?, updated_at = ? WHERE id = ?"
+        "UPDATE wh_host_profiles SET avg_rating = ?, total_reviews = ?, updated_at = ? WHERE id = ?"
       ).bind(newAvg, newTotal, ts, profile.id).run();
     }
   }

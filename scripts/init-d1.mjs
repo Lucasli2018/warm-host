@@ -11,7 +11,7 @@
 //
 // 幂等：迁移全部为 CREATE ... IF NOT EXISTS；播种仅在缺失时执行。
 //
-// 为什么需要它：functions/_middleware.js 的自动建表只在「users 表不存在」时播种 admin，
+// 为什么需要它：functions/_middleware.js 的自动建表只在「wh_users 表不存在」时播种 admin，
 // 若表已由本脚本建好，middleware 会跳过播种 → 线上没有管理员账号。本脚本补这一步。
 
 import { readFileSync, readdirSync } from "node:fs";
@@ -160,13 +160,13 @@ const nowIso = new Date().toISOString();
 
 if (!CHECK_ONLY) {
   // 1) admin：仅当 phone='admin' 不存在时插入
-  const existingAdmin = await run("SELECT id FROM users WHERE phone = 'admin'");
+  const existingAdmin = await run("SELECT id FROM wh_users WHERE phone = 'admin'");
   if (existingAdmin.length === 0) {
     const salt = genSalt(16);
     const hash = await hashPassword("admin123", salt);
     const id = crypto.randomUUID();
     await run(
-      `INSERT INTO users (id, phone, password_hash, password_salt, nickname, role, created_at, updated_at)
+      `INSERT INTO wh_users (id, phone, password_hash, password_salt, nickname, role, created_at, updated_at)
        VALUES ('${id}', 'admin', '${hash}', '${salt}', '管理员', 'admin', '${nowIso}', '${nowIso}')`
     );
     console.log(`[seed] admin 账号已创建 (admin / admin123)`);
@@ -175,7 +175,7 @@ if (!CHECK_ONLY) {
   }
 
   // 2) 邀请码：仅当没有任何「未被使用」的邀请码时补种
-  const avail = await run("SELECT COUNT(*) AS c FROM invite_codes WHERE used_by IS NULL");
+  const avail = await run("SELECT COUNT(*) AS c FROM wh_invite_codes WHERE used_by IS NULL");
   const availCount = (avail[0] && avail[0].c) || 0;
   if (availCount < SEED_INVITE_COUNT) {
     const need = SEED_INVITE_COUNT - availCount;
@@ -184,7 +184,7 @@ if (!CHECK_ONLY) {
       const code = generateInviteCode();
       codes.push(code);
       await run(
-        `INSERT INTO invite_codes (code, owner_id, created_at) VALUES ('${code}', NULL, '${nowIso}')`
+        `INSERT INTO wh_invite_codes (code, owner_id, created_at) VALUES ('${code}', NULL, '${nowIso}')`
       );
     }
     console.log(`[seed] 补种 ${need} 个邀请码`);
@@ -199,7 +199,7 @@ const tables = await run(
   "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
 );
 const indexes = await run(
-  "SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%' ORDER BY name"
+  "SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'wh_idx_%' ORDER BY name"
 );
 const counts = {};
 for (const t of ["users", "host_profiles", "pets", "needs", "orders", "reviews", "blacklist", "sponsors", "notifications", "invite_codes", "sessions", "host_availability"]) {
@@ -208,8 +208,8 @@ for (const t of ["users", "host_profiles", "pets", "needs", "orders", "reviews",
 }
 
 const EXPECTED_TABLES = [
-  "blacklist", "host_availability", "host_profiles", "invite_codes", "needs",
-  "notifications", "orders", "pets", "reviews", "sessions", "sponsors", "users",
+  "wh_blacklist", "wh_host_availability", "wh_host_profiles", "wh_invite_codes", "wh_needs",
+  "wh_notifications", "wh_orders", "wh_pets", "wh_reviews", "wh_sessions", "wh_sponsors", "wh_users",
 ];
 const got = tables.map(r => r.name);
 const missing = EXPECTED_TABLES.filter(t => !got.includes(t));
@@ -218,7 +218,7 @@ console.log(`\n[check] 表 ${got.length}/${EXPECTED_TABLES.length}｜索引 ${in
 console.log(`[check] 行数 ${Object.entries(counts).map(([k, v]) => `${k}=${v}`).join(" ")}`);
 
 // admin 密码自检：用库里存的 salt/hash 反算一次
-const adminRow = await run("SELECT password_hash, password_salt FROM users WHERE phone = 'admin'");
+const adminRow = await run("SELECT password_hash, password_salt FROM wh_users WHERE phone = 'admin'");
 let pwdOk = false;
 if (adminRow.length) {
   const recomputed = await hashPassword("admin123", adminRow[0].password_salt);

@@ -1,6 +1,6 @@
 // /api/needs
 //   POST 创建需求（需登录）
-//   GET  公开需求列表（无需登录），status='open'，JOIN pets + owner nickname
+//   GET  公开需求列表（无需登录），status='open'，JOIN wh_pets + owner nickname
 //
 // 状态机（design.md §6.1）：
 //   open → matched（寄养人接单，Task 10 处理）
@@ -110,7 +110,7 @@ export async function onRequestPost({ request, env }) {
 
   // 宠物归属校验
   const pet = await env.DB.prepare(
-    "SELECT id, owner_id FROM pets WHERE id = ?"
+    "SELECT id, owner_id FROM wh_pets WHERE id = ?"
   ).bind(petId).first();
   if (!pet) return fail("宠物不存在", 404);
   if (pet.owner_id !== user.id) return fail("无权为该宠物发布需求", 403);
@@ -119,7 +119,7 @@ export async function onRequestPost({ request, env }) {
   const ts = now();
 
   await env.DB.prepare(
-    `INSERT INTO needs (id, owner_id, pet_id, start_date, end_date,
+    `INSERT INTO wh_needs (id, owner_id, pet_id, start_date, end_date,
        expected_area, expected_price_cents, description, status, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', ?, ?)`
   ).bind(
@@ -133,9 +133,9 @@ export async function onRequestPost({ request, env }) {
             p.name AS pet_name, p.species AS pet_species, p.breed AS pet_breed,
             p.gender AS pet_gender, p.age AS pet_age, p.cover_key AS pet_cover_key,
             u.nickname AS owner_nickname
-     FROM needs n
-     JOIN pets p ON n.pet_id = p.id
-     JOIN users u ON n.owner_id = u.id
+     FROM wh_needs n
+     JOIN wh_pets p ON n.pet_id = p.id
+     JOIN wh_users u ON n.owner_id = u.id
      WHERE n.id = ?`
   ).bind(id).first();
 
@@ -160,7 +160,7 @@ export async function onRequestGet({ request, env }) {
     return d.toISOString();
   })();
   await env.DB.prepare(
-    "UPDATE needs SET status = 'expired', updated_at = ? WHERE status = 'open' AND created_at < ?"
+    "UPDATE wh_needs SET status = 'expired', updated_at = ? WHERE status = 'open' AND created_at < ?"
   ).bind(now(), cutoff).run();
 
   // 只返回 open 且 owner 未 ban 且 owner 非已确认黑名单目标
@@ -169,23 +169,23 @@ export async function onRequestGet({ request, env }) {
             p.name AS pet_name, p.species AS pet_species, p.breed AS pet_breed,
             p.gender AS pet_gender, p.age AS pet_age, p.cover_key AS pet_cover_key,
             u.nickname AS owner_nickname
-     FROM needs n
-     JOIN pets p ON n.pet_id = p.id
-     JOIN users u ON n.owner_id = u.id
+     FROM wh_needs n
+     JOIN wh_pets p ON n.pet_id = p.id
+     JOIN wh_users u ON n.owner_id = u.id
      WHERE n.status = 'open'
        AND u.banned = 0
-       AND u.id NOT IN (SELECT bl.target_user_id FROM blacklist bl WHERE bl.status = 'confirmed')
+       AND u.id NOT IN (SELECT bl.target_user_id FROM wh_blacklist bl WHERE bl.status = 'confirmed')
      ORDER BY n.created_at DESC
      LIMIT ? OFFSET ?`
   ).bind(...[pageSize, offset]).all();
 
   const totalRow = await env.DB.prepare(
     `SELECT COUNT(*) AS total
-     FROM needs n
-     JOIN users u ON n.owner_id = u.id
+     FROM wh_needs n
+     JOIN wh_users u ON n.owner_id = u.id
      WHERE n.status = 'open'
        AND u.banned = 0
-       AND u.id NOT IN (SELECT bl.target_user_id FROM blacklist bl WHERE bl.status = 'confirmed')`
+       AND u.id NOT IN (SELECT bl.target_user_id FROM wh_blacklist bl WHERE bl.status = 'confirmed')`
   ).first();
 
   return json({

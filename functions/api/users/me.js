@@ -74,7 +74,7 @@ export async function onRequestPut({ request, env }) {
   values.push(user.id);
 
   await env.DB.prepare(
-    `UPDATE users SET ${fields.join(", ")} WHERE id = ?`
+    `UPDATE wh_users SET ${fields.join(", ")} WHERE id = ?`
   ).bind(...values).run();
 
   return json({ success: true });

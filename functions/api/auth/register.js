@@ -107,7 +107,7 @@ export async function onRequestPost({ request, env }) {
   // D1 不支持事务，但这里的 SELECT + UPDATE 在同一次请求内串行执行，
   // 配合 invite_codes.code 的 PRIMARY KEY 约束即可保证唯一性。
   const inviteRow = await env.DB.prepare(
-    "SELECT * FROM invite_codes WHERE code = ? AND used_by IS NULL"
+    "SELECT * FROM wh_invite_codes WHERE code = ? AND used_by IS NULL"
   ).bind(inviteCode).first();
 
   if (!inviteRow) {
@@ -117,7 +117,7 @@ export async function onRequestPost({ request, env }) {
 
   // --- 检查手机号是否已注册 ---
   const existing = await env.DB.prepare(
-    "SELECT id FROM users WHERE phone = ?"
+    "SELECT id FROM wh_users WHERE phone = ?"
   ).bind(phone).first();
 
   if (existing) {
@@ -134,31 +134,31 @@ export async function onRequestPost({ request, env }) {
 
   // 插入用户
   await env.DB.prepare(
-    `INSERT INTO users (id, phone, password_hash, password_salt, nickname, is_owner, is_host, host_status, invited_by, role, created_at, updated_at)
+    `INSERT INTO wh_users (id, phone, password_hash, password_salt, nickname, is_owner, is_host, host_status, invited_by, role, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, 1, 0, 'pending', ?, 'user', ?, ?)`
   ).bind(userId, phone, hash, salt, nickname, inviteRow.owner_id, ts, ts).run();
 
   // 标记邀请码已用
   await env.DB.prepare(
-    "UPDATE invite_codes SET used_by = ?, used_at = ? WHERE code = ?"
+    "UPDATE wh_invite_codes SET used_by = ?, used_at = ? WHERE code = ?"
   ).bind(userId, ts, inviteCode).run();
 
   // 生成 3 个新邀请码分配给新用户
   for (let i = 0; i < 3; i++) {
     await env.DB.prepare(
-      "INSERT INTO invite_codes (code, owner_id, created_at) VALUES (?, ?, ?)"
+      "INSERT INTO wh_invite_codes (code, owner_id, created_at) VALUES (?, ?, ?)"
     ).bind(generateInviteCode(), userId, ts).run();
   }
 
   // 创建 Session（24 小时过期）
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
   await env.DB.prepare(
-    "INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)"
+    "INSERT INTO wh_sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)"
   ).bind(token, userId, ts, expiresAt).run();
 
   // 顺手清理过期 session
   await env.DB.prepare(
-    "DELETE FROM sessions WHERE expires_at < ?"
+    "DELETE FROM wh_sessions WHERE expires_at < ?"
   ).bind(ts).run();
 
   recordAttempt(rlKey, true);

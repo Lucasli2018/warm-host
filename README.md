@@ -19,7 +19,7 @@
 ## 技术栈
 
 - **Cloudflare Pages**（静态托管）+ **Pages Functions**（后端 API，zero-build）
-- **D1**（SQLite 数据库，12 张表）+ **R2**（头像/宠物/评价图片）
+- **D1**（SQLite 数据库，12 张表，统一 `wh_` 前缀，复用共享 `dev` 库）+ **R2**（头像/宠物/评价图片）
 - 前端：纯 HTML/CSS/JS，零构建，Mobile-first，底部 Tab 导航
 - 鉴权：HMAC-SHA256 加盐密码 + 32 字节 hex Session Token（24h），`Authorization: Bearer <token>`
 
@@ -113,6 +113,11 @@ node tools/seed-demo.mjs                              # 本地
 node tools/seed-demo.mjs https://warm-host.pages.dev  # 线上
 ```
 
+> **测试数据**：该脚本走真实 API，会在目标环境（本地或线上共享 `dev` 库）写入一套完整测试数据：
+> 5 位寄养人 + 6 位主人 + 7 只宠物 + 12 条需求（8 已完成 + 1 进行中 + 3 待接单）+ 8 条评价 + 2 条举报。
+> 切换数据源（共享 `dev` 库 + `wh_` 表前缀）后，表结构由 `_middleware.js` / `init-d1.mjs` 自动建好，
+> 部署到线上后直接 `node tools/seed-demo.mjs https://你的域名` 即可灌入测试数据。
+
 生成内容（走真实 API，故订单状态机、评分聚合、黑名单过滤都是真实链路产物）：
 
 | 内容 | 数量 |
@@ -148,18 +153,20 @@ TOKEN_FILE=./.cf-token node scripts/init-d1.mjs --create
 脚本做的事：建 D1 库（`--create`）→ 按序执行 `migrations/*.sql` → 播种 admin + 10 个邀请码
 → 自检（12 表 / 14 索引 / 行数 / admin 密码哈希回算）。幂等，可重复执行；`--check` 只自检不写库。
 
-> **为什么必须跑它**：`_middleware.js` 的自动建表只在「users 表不存在」时播种 admin。
+> **为什么必须跑它**：`_middleware.js` 的自动建表只在「wh_users 表不存在」时播种 admin。
 > 若先用本脚本建好表，middleware 会跳过播种 → 线上没有管理员账号。
 
 ### 方式 B：手动 wrangler
 
 ```bash
-wrangler d1 create warm-host-db          # 把返回的 database_id 填进 wrangler.toml
+# D1 已切换为共享 dev 库（database_id 3c83aee3-4645-450b-b50b-6488750deeb4），无需新建；
+# 所有表以 wh_ 前缀隔离，与 linguaverse / workbench / event-signin / heartverse / shop-booking 共用同一 dev 库
 wrangler r2 bucket create warm-host-images
 wrangler pages deploy public --project-name warm-host
 ```
 
-R2 桶名 `warm-host-images`，D1 库名 `warm-host-db`，`database_id` 已写入 `wrangler.toml`。
+R2 桶名 `warm-host-images`；D1 复用共享 `dev` 库（database_id `3c83aee3-4645-450b-b50b-6488750deeb4`），
+所有表以 `wh_` 前缀隔离，`database_id` 已写入 `wrangler.toml`。
 
 > 部署前若 CF API 请求超时，加 `NODE_OPTIONS=--dns-result-order=ipv4first`（本机无 IPv6 出口）。
 

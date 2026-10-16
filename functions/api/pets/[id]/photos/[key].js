@@ -20,7 +20,7 @@ export async function onRequestGet({ env, params }) {
 
   // 2. 校验 key 属于该宠物
   const row = await env.DB.prepare(
-    "SELECT cover_key, photos FROM pets WHERE id = ?"
+    "SELECT cover_key, photos FROM wh_pets WHERE id = ?"
   ).bind(id).first();
   if (!row) return new Response("Not Found", { status: 404 });
 

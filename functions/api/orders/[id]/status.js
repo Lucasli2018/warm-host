@@ -52,7 +52,7 @@ export async function onRequestPost({ request, env, params }) {
   const user = await requireUser(request, env);
   if (!user) return fail("未登录", 401);
 
-  const order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?").bind(params.id).first();
+  const order = await env.DB.prepare("SELECT * FROM wh_orders WHERE id = ?").bind(params.id).first();
   if (!order) return fail("订单不存在", 404);
 
   const isOwner = order.owner_id === user.id;
@@ -82,11 +82,11 @@ export async function onRequestPost({ request, env, params }) {
   let update;
   if (field) {
     update = await env.DB.prepare(
-      `UPDATE orders SET status = ?, updated_at = ?, ${field} = ? WHERE id = ?`
+      `UPDATE wh_orders SET status = ?, updated_at = ?, ${field} = ? WHERE id = ?`
     ).bind(nextStatus, ts, ts, order.id).run();
   } else {
     update = await env.DB.prepare(
-      `UPDATE orders SET status = ?, updated_at = ? WHERE id = ?`
+      `UPDATE wh_orders SET status = ?, updated_at = ? WHERE id = ?`
     ).bind(nextStatus, ts, order.id).run();
   }
   if (!update || Number(update.changes) === 0) return fail("状态更新失败", 500);
@@ -96,7 +96,7 @@ export async function onRequestPost({ request, env, params }) {
 
   // 同步 needs 状态
   if (nextStatus === "completed") {
-    await env.DB.prepare("UPDATE needs SET status = 'filled', updated_at = ? WHERE id = ?")
+    await env.DB.prepare("UPDATE wh_needs SET status = 'filled', updated_at = ? WHERE id = ?")
       .bind(ts, order.need_id).run();
     await createNotification(env, {
       userId: order.owner_id,
@@ -108,10 +108,10 @@ export async function onRequestPost({ request, env, params }) {
   } else if (nextStatus === "cancelled") {
     // pending 阶段取消 → 释放需求回 open；已确认/进行中取消 → needs 记 cancelled
     if (order.status === "pending") {
-      await env.DB.prepare("UPDATE needs SET status = 'open', updated_at = ? WHERE id = ? AND status = 'matched'")
+      await env.DB.prepare("UPDATE wh_needs SET status = 'open', updated_at = ? WHERE id = ? AND status = 'matched'")
         .bind(ts, order.need_id).run();
     } else {
-      await env.DB.prepare("UPDATE needs SET status = 'cancelled', updated_at = ? WHERE id = ?")
+      await env.DB.prepare("UPDATE wh_needs SET status = 'cancelled', updated_at = ? WHERE id = ?")
         .bind(ts, order.need_id).run();
     }
     await createNotification(env, {
@@ -139,7 +139,7 @@ export async function onRequestPost({ request, env, params }) {
     });
   } else if (nextStatus === "disputed") {
     // 通知全部 admin
-    const admins = await env.DB.prepare("SELECT id, nickname FROM users WHERE role = 'admin' AND banned = 0").all();
+    const admins = await env.DB.prepare("SELECT id, nickname FROM wh_users WHERE role = 'admin' AND banned = 0").all();
     const list = admins.results || admins;
     for (const a of list) {
       await createNotification(env, {

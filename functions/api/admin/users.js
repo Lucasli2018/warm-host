@@ -25,8 +25,8 @@ const MAX_PAGE_SIZE = 100;
 const SELECT_FIELDS = `
   u.id, u.phone, u.nickname, u.host_status, u.is_host, u.banned,
   u.role, u.city, u.created_at,
-  (SELECT COUNT(*) FROM orders o WHERE o.owner_id = u.id OR o.host_id = u.id) AS order_count,
-  (SELECT COUNT(*) FROM pets p WHERE p.owner_id = u.id) AS pet_count
+  (SELECT COUNT(*) FROM wh_orders o WHERE o.owner_id = u.id OR o.host_id = u.id) AS order_count,
+  (SELECT COUNT(*) FROM wh_pets p WHERE p.owner_id = u.id) AS pet_count
 `;
 
 export async function onRequestGet({ request, env }) {
@@ -44,8 +44,8 @@ export async function onRequestGet({ request, env }) {
   // 构建 SQL（有搜索词 → 加 WHERE，否则直接查全表）
   const like = `%${q}%`;
   const where = q ? " WHERE u.phone LIKE ? OR u.nickname LIKE ?" : "";
-  const countSql = `SELECT COUNT(*) AS c FROM users u${where}`;
-  const listSql = `SELECT ${SELECT_FIELDS} FROM users u${where} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`;
+  const countSql = `SELECT COUNT(*) AS c FROM wh_users u${where}`;
+  const listSql = `SELECT ${SELECT_FIELDS} FROM wh_users u${where} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`;
 
   const countBind = q ? [like, like] : [];
   const listBind = q ? [like, like, pageSize, offset] : [pageSize, offset];

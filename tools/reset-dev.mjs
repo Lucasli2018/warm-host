@@ -19,7 +19,7 @@ import { dirname, join } from "node:path";
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const PERSIST = process.env.PERSIST || "./.wrangler-dev";
 const WRANGLER = process.env.WRANGLER || "D:/npm-global/node_modules/wrangler/bin/wrangler.js";
-const DB_NAME = "warm-host-db";
+const DB_NAME = "dev";
 
 const run = (label, args, opts = {}) => {
   process.stdout.write(`\n▸ ${label}\n`);

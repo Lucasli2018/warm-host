@@ -22,7 +22,7 @@ export async function onRequestPost(ctx) {
 
   // 检查未使用邀请码数量
   const unused = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM invite_codes WHERE owner_id = ? AND used_by IS NULL"
+    "SELECT COUNT(*) AS c FROM wh_invite_codes WHERE owner_id = ? AND used_by IS NULL"
   ).bind(userId).first();
 
   if (unused && unused.c >= 5) {
@@ -35,7 +35,7 @@ export async function onRequestPost(ctx) {
   const todayStartIso = dayStart.toISOString();
 
   const todaySupply = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM invite_codes WHERE owner_id = ? AND created_at >= ?"
+    "SELECT COUNT(*) AS c FROM wh_invite_codes WHERE owner_id = ? AND created_at >= ?"
   ).bind(userId, todayStartIso).first();
 
   if (todaySupply && todaySupply.c >= 3) {
@@ -47,7 +47,7 @@ export async function onRequestPost(ctx) {
   for (let i = 0; i < 3; i++) {
     const code = generateInviteCode();
     await env.DB.prepare(
-      "INSERT INTO invite_codes (code, owner_id, created_at) VALUES (?, ?, ?)"
+      "INSERT INTO wh_invite_codes (code, owner_id, created_at) VALUES (?, ?, ?)"
     ).bind(code, userId, ts).run();
     codes.push(code);
   }
@@ -72,8 +72,8 @@ export async function onRequestGet(ctx) {
   const { results } = await env.DB.prepare(
     `SELECT ic.code, ic.used_by, ic.used_at, ic.created_at,
             u.nickname AS user_nickname
-     FROM invite_codes ic
-     LEFT JOIN users u ON ic.used_by = u.id
+     FROM wh_invite_codes ic
+     LEFT JOIN wh_users u ON ic.used_by = u.id
      WHERE ic.owner_id = ?
      ORDER BY ic.used_at IS NULL DESC, ic.created_at DESC`
   ).bind(userId).all();

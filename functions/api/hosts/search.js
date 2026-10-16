@@ -115,12 +115,12 @@ export async function onRequestGet({ request, env }) {
   const whereParts = [
     "u.host_status = 'active'",
     "u.banned = 0",
-    "u.id NOT IN (SELECT bl.target_user_id FROM blacklist bl WHERE bl.status = 'confirmed')",
+    "u.id NOT IN (SELECT bl.target_user_id FROM wh_blacklist bl WHERE bl.status = 'confirmed')",
   ];
   const binds = [];
 
   if (hasDateRange) {
-    whereParts.push(`EXISTS (SELECT 1 FROM host_availability a WHERE a.host_id = h.id AND a.active = 1 AND a.start_date <= ? AND a.end_date >= ?)`);
+    whereParts.push(`EXISTS (SELECT 1 FROM wh_host_availability a WHERE a.host_id = h.id AND a.active = 1 AND a.start_date <= ? AND a.end_date >= ?)`);
     binds.push(from, to);
   }
   if (district) { whereParts.push(`h.district LIKE ?`); binds.push(`%${district}%`); }
@@ -152,10 +152,10 @@ export async function onRequestGet({ request, env }) {
     "h.total_reviews",
   ];
 
-  const sql = `SELECT ${selects.join(", ")} FROM host_profiles h JOIN users u ON h.user_id = u.id${whereSql} ${SORT_BY[sort]} LIMIT ? OFFSET ?`;
+  const sql = `SELECT ${selects.join(", ")} FROM wh_host_profiles h JOIN wh_users u ON h.user_id = u.id${whereSql} ${SORT_BY[sort]} LIMIT ? OFFSET ?`;
   const listBinds = [...binds, pageSize, offset];
 
-  const countSql = `SELECT COUNT(*) AS cnt FROM host_profiles h JOIN users u ON h.user_id = u.id${whereSql}`;
+  const countSql = `SELECT COUNT(*) AS cnt FROM wh_host_profiles h JOIN wh_users u ON h.user_id = u.id${whereSql}`;
 
   // ---------- 执行 count ----------
   let total = 0;
@@ -182,7 +182,7 @@ export async function onRequestGet({ request, env }) {
     availableDaysMap = new Map();
     for (const row of results) {
       const { results: aRows } = await env.DB.prepare(
-        "SELECT start_date, end_date FROM host_availability WHERE host_id = ? AND active = 1"
+        "SELECT start_date, end_date FROM wh_host_availability WHERE host_id = ? AND active = 1"
       ).bind(row.host_id).all();
       availableDaysMap.set(row.host_id, calcAvailableDays(aRows || [], from, to));
     }

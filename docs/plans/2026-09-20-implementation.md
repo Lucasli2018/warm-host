@@ -87,8 +87,8 @@ compatibility_date = "2025-01-01"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "warm-host-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_name = "dev"
+database_id = "3c83aee3-4645-450b-b50b-6488750deeb4"
 
 [[r2_buckets]]
 binding = "R2"

@@ -54,7 +54,7 @@ export async function onRequestGet({ request, env, params }) {
   }
 
   // 2. key 以 orderId 开头 — 校验该订单属于当前用户
-  const order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?").bind(prefix).first();
+  const order = await env.DB.prepare("SELECT * FROM wh_orders WHERE id = ?").bind(prefix).first();
   if (order) {
     const isOwner = order.owner_id === user.id;
     const isHost = order.host_id === user.id;
@@ -75,7 +75,7 @@ export async function onRequestGet({ request, env, params }) {
   }
 
   // 3. key 已存在于 reviews.photos 中，且当前用户是 reviewer 或 reviewee
-  const reviewRows = await env.DB.prepare("SELECT reviewer_id, reviewee_id, photos FROM reviews").all();
+  const reviewRows = await env.DB.prepare("SELECT reviewer_id, reviewee_id, photos FROM wh_reviews").all();
   const list = reviewRows.results || reviewRows;
   for (const r of list) {
     const photos = safeJsonArray(r.photos);

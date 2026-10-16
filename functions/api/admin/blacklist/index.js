@@ -57,10 +57,10 @@ export async function onRequestGet({ request, env }) {
             ur.nickname AS reporter_nickname,
             ut.nickname AS target_nickname, ut.phone AS target_phone,
             uh.nickname AS handled_by_nickname
-     FROM blacklist b
-     LEFT JOIN users ur ON b.reporter_id = ur.id
-     LEFT JOIN users ut ON b.target_user_id = ut.id
-     LEFT JOIN users uh ON b.handled_by = uh.id
+     FROM wh_blacklist b
+     LEFT JOIN wh_users ur ON b.reporter_id = ur.id
+     LEFT JOIN wh_users ut ON b.target_user_id = ut.id
+     LEFT JOIN wh_users uh ON b.handled_by = uh.id
      ${where}
      ORDER BY b.created_at DESC
      LIMIT ? OFFSET ?`
@@ -69,13 +69,13 @@ export async function onRequestGet({ request, env }) {
   // 总数（按同一 status 过滤）
   const countBind = status ? [status] : [];
   const totalRow = await env.DB.prepare(
-    `SELECT COUNT(*) AS c FROM blacklist b${where}`
+    `SELECT COUNT(*) AS c FROM wh_blacklist b${where}`
   ).bind(...countBind).first();
   const total = (totalRow && totalRow.c) || 0;
 
   // pending 数量（供 Tab 红点使用）
   const pendingRow = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM blacklist WHERE status = 'pending'"
+    "SELECT COUNT(*) AS c FROM wh_blacklist WHERE status = 'pending'"
   ).first();
   const pendingCount = (pendingRow && pendingRow.c) || 0;
 

@@ -70,8 +70,8 @@ export async function onRequestGet({ env, params }) {
 
   const row = await env.DB.prepare(
     `SELECT p.*, u.banned AS owner_banned
-     FROM pets p
-     JOIN users u ON p.owner_id = u.id
+     FROM wh_pets p
+     JOIN wh_users u ON p.owner_id = u.id
      WHERE p.id = ?`
   ).bind(id).first();
 
@@ -90,7 +90,7 @@ export async function onRequestPut({ request, env, params }) {
   if (!id) return fail("缺少参数", 400);
 
   const existing = await env.DB.prepare(
-    "SELECT id, owner_id FROM pets WHERE id = ?"
+    "SELECT id, owner_id FROM wh_pets WHERE id = ?"
   ).bind(id).first();
   if (!existing) return fail("宠物不存在", 404);
   if (existing.owner_id !== user.id) return fail("无权操作此宠物", 403);
@@ -122,7 +122,7 @@ export async function onRequestPut({ request, env, params }) {
 
   const ts = now();
   await env.DB.prepare(
-    `UPDATE pets SET
+    `UPDATE wh_pets SET
        name = ?, species = ?, breed = ?, gender = ?, age = ?, weight = ?,
        personality = ?, health_notes = ?, daily_habits = ?, special_needs = ?,
        updated_at = ?
@@ -134,7 +134,7 @@ export async function onRequestPut({ request, env, params }) {
     ts, id
   ).run();
 
-  const updated = await env.DB.prepare("SELECT * FROM pets WHERE id = ?").bind(id).first();
+  const updated = await env.DB.prepare("SELECT * FROM wh_pets WHERE id = ?").bind(id).first();
   return json(serialize(updated));
 }
 
@@ -147,12 +147,12 @@ export async function onRequestDelete({ request, env, params }) {
   if (!id) return fail("缺少参数", 400);
 
   const existing = await env.DB.prepare(
-    "SELECT id, owner_id FROM pets WHERE id = ?"
+    "SELECT id, owner_id FROM wh_pets WHERE id = ?"
   ).bind(id).first();
   if (!existing) return fail("宠物不存在", 404);
   if (existing.owner_id !== user.id) return fail("无权操作此宠物", 403);
 
-  await env.DB.prepare("DELETE FROM pets WHERE id = ?").bind(id).run();
+  await env.DB.prepare("DELETE FROM wh_pets WHERE id = ?").bind(id).run();
 
   return json({ success: true });
 }

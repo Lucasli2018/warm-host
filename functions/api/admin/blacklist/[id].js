@@ -2,7 +2,7 @@
 // 需 admin（user.role === 'admin'）
 //
 // Body: { action: 'confirm' | 'dismiss', banUser?: boolean }
-//   confirm + banUser=true → status='confirmed' + users.banned=1 + DELETE sessions
+//   confirm + banUser=true → status='confirmed' + users.banned=1 + DELETE wh_sessions
 //   confirm + banUser=false → status='confirmed'
 //   dismiss → status='dismissed'
 //
@@ -39,7 +39,7 @@ export async function onRequestPost({ request, env, params }) {
 
   // 记录存在性
   const record = await env.DB.prepare(
-    "SELECT id, status, reporter_id, target_user_id, target_type, category FROM blacklist WHERE id = ?"
+    "SELECT id, status, reporter_id, target_user_id, target_type, category FROM wh_blacklist WHERE id = ?"
   ).bind(id).first();
   if (!record) return fail("记录不存在", 404);
 
@@ -53,18 +53,18 @@ export async function onRequestPost({ request, env, params }) {
 
   // 更新 blacklist 记录
   await env.DB.prepare(
-    "UPDATE blacklist SET status = ?, handled_at = ?, handled_by = ? WHERE id = ?"
+    "UPDATE wh_blacklist SET status = ?, handled_at = ?, handled_by = ? WHERE id = ?"
   ).bind(newStatus, ts, user.id, id).run();
 
   // confirm + banUser=true → 禁用目标用户
   let actuallyBanned = false;
   if (action === "confirm" && banUser) {
     await env.DB.prepare(
-      "UPDATE users SET banned = 1, updated_at = ? WHERE id = ?"
+      "UPDATE wh_users SET banned = 1, updated_at = ? WHERE id = ?"
     ).bind(ts, record.target_user_id).run();
     // 强制下线：删除该用户全部 sessions（与 admin/users/ban.js 保持一致）
     await env.DB.prepare(
-      "DELETE FROM sessions WHERE user_id = ?"
+      "DELETE FROM wh_sessions WHERE user_id = ?"
     ).bind(record.target_user_id).run();
     actuallyBanned = true;
   }

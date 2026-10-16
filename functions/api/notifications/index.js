@@ -55,7 +55,7 @@ export async function onRequestGet({ request, env }) {
   // 惰性清理：已读且 90 天前的通知
   try {
     await env.DB.prepare(
-      "DELETE FROM notifications WHERE user_id = ? AND read = 1 AND created_at < ?"
+      "DELETE FROM wh_notifications WHERE user_id = ? AND read = 1 AND created_at < ?"
     ).bind(user.id, daysAgoISO(CLEANUP_DAYS)).run();
   } catch (err) {
     console.error("[notifications] cleanup failed:", err && err.message);
@@ -63,19 +63,19 @@ export async function onRequestGet({ request, env }) {
 
   // total
   const totalRow = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM notifications WHERE user_id = ?"
+    "SELECT COUNT(*) AS c FROM wh_notifications WHERE user_id = ?"
   ).bind(user.id).first();
   const total = totalRow ? Number(totalRow.c || 0) : 0;
 
   // unreadCount
   const unreadRow = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM notifications WHERE user_id = ? AND read = 0"
+    "SELECT COUNT(*) AS c FROM wh_notifications WHERE user_id = ? AND read = 0"
   ).bind(user.id).first();
   const unreadCount = unreadRow ? Number(unreadRow.c || 0) : 0;
 
   // 分页列表
   const { results: rows } = await env.DB.prepare(
-    "SELECT id, type, title, body, link, read, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?"
+    "SELECT id, type, title, body, link, read, created_at FROM wh_notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?"
   ).bind(user.id, pageSize, offset).all();
 
   const notifications = (rows || []).map(serialize);

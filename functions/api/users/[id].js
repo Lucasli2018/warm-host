@@ -21,9 +21,9 @@ export async function onRequestGet({ env, params }) {
             u.city,
             u.host_status,
             COALESCE(h.is_verified, 0) AS is_verified,
-            (SELECT COUNT(*) FROM reviews r WHERE r.reviewee_id = u.id) AS review_count
-     FROM users u
-     LEFT JOIN host_profiles h ON h.user_id = u.id
+            (SELECT COUNT(*) FROM wh_reviews r WHERE r.reviewee_id = u.id) AS review_count
+     FROM wh_users u
+     LEFT JOIN wh_host_profiles h ON h.user_id = u.id
      WHERE u.id = ? AND u.banned = 0`
   ).bind(id).first();
 

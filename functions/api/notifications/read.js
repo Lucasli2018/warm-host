@@ -24,7 +24,7 @@ function changesOf(result) {
 
 async function countUnread(env, userId) {
   const row = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM notifications WHERE user_id = ? AND read = 0"
+    "SELECT COUNT(*) AS c FROM wh_notifications WHERE user_id = ? AND read = 0"
   ).bind(userId).first();
   return row ? Number(row.c || 0) : 0;
 }
@@ -47,18 +47,18 @@ export async function onRequestPost({ request, env }) {
   if (all) {
     // 全部标记已读（仅未读的会被 update）
     const r = await env.DB.prepare(
-      "UPDATE notifications SET read = 1 WHERE user_id = ? AND read = 0"
+      "UPDATE wh_notifications SET read = 1 WHERE user_id = ? AND read = 0"
     ).bind(user.id).run();
     marked = changesOf(r);
   } else {
     // 单条：先校验归属
     const own = await env.DB.prepare(
-      "SELECT id FROM notifications WHERE id = ? AND user_id = ?"
+      "SELECT id FROM wh_notifications WHERE id = ? AND user_id = ?"
     ).bind(id, user.id).first();
     if (!own) return fail("通知不存在", 404);
 
     const r = await env.DB.prepare(
-      "UPDATE notifications SET read = 1 WHERE id = ? AND user_id = ? AND read = 0"
+      "UPDATE wh_notifications SET read = 1 WHERE id = ? AND user_id = ? AND read = 0"
     ).bind(id, user.id).run();
     marked = changesOf(r);
   }

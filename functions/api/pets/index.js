@@ -77,7 +77,7 @@ export async function onRequestPost({ request, env }) {
   const ts = now();
 
   await env.DB.prepare(
-    `INSERT INTO pets (id, owner_id, name, species, breed, gender, age, weight,
+    `INSERT INTO wh_pets (id, owner_id, name, species, breed, gender, age, weight,
       personality, health_notes, daily_habits, special_needs, cover_key, photos,
       created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, '[]', ?, ?)`

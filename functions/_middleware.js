@@ -15,7 +15,7 @@ let initializing = false;
 // 来源：schema.sql（12 表 + 索引）
 const SCHEMA_STATEMENTS = [
   // --- users ---
-  `CREATE TABLE IF NOT EXISTS users (
+  `CREATE TABLE IF NOT EXISTS wh_users (
     id TEXT PRIMARY KEY,
     phone TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
@@ -38,7 +38,7 @@ const SCHEMA_STATEMENTS = [
     updated_at TEXT
   )`,
   // --- host_profiles ---
-  `CREATE TABLE IF NOT EXISTS host_profiles (
+  `CREATE TABLE IF NOT EXISTS wh_host_profiles (
     id TEXT PRIMARY KEY,
     user_id TEXT UNIQUE NOT NULL,
     bio TEXT,
@@ -60,7 +60,7 @@ const SCHEMA_STATEMENTS = [
     updated_at TEXT
   )`,
   // --- host_availability ---
-  `CREATE TABLE IF NOT EXISTS host_availability (
+  `CREATE TABLE IF NOT EXISTS wh_host_availability (
     id TEXT PRIMARY KEY,
     host_id TEXT NOT NULL,
     start_date TEXT NOT NULL,
@@ -70,7 +70,7 @@ const SCHEMA_STATEMENTS = [
     created_at TEXT NOT NULL
   )`,
   // --- pets ---
-  `CREATE TABLE IF NOT EXISTS pets (
+  `CREATE TABLE IF NOT EXISTS wh_pets (
     id TEXT PRIMARY KEY,
     owner_id TEXT NOT NULL,
     name TEXT NOT NULL,
@@ -89,7 +89,7 @@ const SCHEMA_STATEMENTS = [
     updated_at TEXT
   )`,
   // --- needs ---
-  `CREATE TABLE IF NOT EXISTS needs (
+  `CREATE TABLE IF NOT EXISTS wh_needs (
     id TEXT PRIMARY KEY,
     owner_id TEXT NOT NULL,
     pet_id TEXT NOT NULL,
@@ -103,7 +103,7 @@ const SCHEMA_STATEMENTS = [
     updated_at TEXT
   )`,
   // --- orders ---
-  `CREATE TABLE IF NOT EXISTS orders (
+  `CREATE TABLE IF NOT EXISTS wh_orders (
     id TEXT PRIMARY KEY,
     need_id TEXT NOT NULL,
     owner_id TEXT NOT NULL,
@@ -124,7 +124,7 @@ const SCHEMA_STATEMENTS = [
     updated_at TEXT
   )`,
   // --- reviews ---
-  `CREATE TABLE IF NOT EXISTS reviews (
+  `CREATE TABLE IF NOT EXISTS wh_reviews (
     id TEXT PRIMARY KEY,
     order_id TEXT UNIQUE NOT NULL,
     reviewer_id TEXT NOT NULL,
@@ -136,7 +136,7 @@ const SCHEMA_STATEMENTS = [
     created_at TEXT NOT NULL
   )`,
   // --- blacklist ---
-  `CREATE TABLE IF NOT EXISTS blacklist (
+  `CREATE TABLE IF NOT EXISTS wh_blacklist (
     id TEXT PRIMARY KEY,
     reporter_id TEXT NOT NULL,
     target_user_id TEXT NOT NULL,
@@ -149,14 +149,14 @@ const SCHEMA_STATEMENTS = [
     handled_by TEXT
   )`,
   // --- sponsors ---
-  `CREATE TABLE IF NOT EXISTS sponsors (
+  `CREATE TABLE IF NOT EXISTS wh_sponsors (
     id TEXT PRIMARY KEY,
     sponsor_id TEXT NOT NULL,
     sponsored_host_id TEXT NOT NULL,
     created_at TEXT NOT NULL
   )`,
   // --- notifications ---
-  `CREATE TABLE IF NOT EXISTS notifications (
+  `CREATE TABLE IF NOT EXISTS wh_notifications (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
     type TEXT NOT NULL,
@@ -167,7 +167,7 @@ const SCHEMA_STATEMENTS = [
     created_at TEXT NOT NULL
   )`,
   // --- invite_codes ---
-  `CREATE TABLE IF NOT EXISTS invite_codes (
+  `CREATE TABLE IF NOT EXISTS wh_invite_codes (
     code TEXT PRIMARY KEY,
     owner_id TEXT,
     used_by TEXT,
@@ -175,27 +175,27 @@ const SCHEMA_STATEMENTS = [
     used_at TEXT
   )`,
   // --- sessions ---
-  `CREATE TABLE IF NOT EXISTS sessions (
+  `CREATE TABLE IF NOT EXISTS wh_sessions (
     token TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
     created_at TEXT NOT NULL,
     expires_at TEXT NOT NULL
   )`,
   // --- Indexes ---
-  `CREATE INDEX IF NOT EXISTS idx_host_availability_host_date ON host_availability(host_id, start_date, end_date)`,
-  `CREATE INDEX IF NOT EXISTS idx_needs_status_date ON needs(status, start_date)`,
-  `CREATE INDEX IF NOT EXISTS idx_needs_owner ON needs(owner_id)`,
-  `CREATE INDEX IF NOT EXISTS idx_orders_owner ON orders(owner_id)`,
-  `CREATE INDEX IF NOT EXISTS idx_orders_host ON orders(host_id)`,
-  `CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`,
-  `CREATE INDEX IF NOT EXISTS idx_reviews_reviewee_created ON reviews(reviewee_id, created_at)`,
-  `CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, read)`,
-  `CREATE INDEX IF NOT EXISTS idx_blacklist_status ON blacklist(status)`,
-  `CREATE INDEX IF NOT EXISTS idx_blacklist_reporter ON blacklist(reporter_id)`,
-  `CREATE INDEX IF NOT EXISTS idx_blacklist_target ON blacklist(target_user_id)`,
-  `CREATE INDEX IF NOT EXISTS idx_blacklist_reporter_target_status ON blacklist(reporter_id, target_user_id, status)`,
-  `CREATE INDEX IF NOT EXISTS idx_invite_codes_owner ON invite_codes(owner_id)`,
-  `CREATE INDEX IF NOT EXISTS idx_invite_codes_used_by ON invite_codes(used_by)`,
+  `CREATE INDEX IF NOT EXISTS wh_wh_idx_host_availability_host_date ON wh_host_availability(host_id, start_date, end_date)`,
+  `CREATE INDEX IF NOT EXISTS wh_wh_idx_needs_status_date ON wh_needs(status, start_date)`,
+  `CREATE INDEX IF NOT EXISTS wh_wh_idx_needs_owner ON wh_needs(owner_id)`,
+  `CREATE INDEX IF NOT EXISTS wh_wh_idx_orders_owner ON wh_orders(owner_id)`,
+  `CREATE INDEX IF NOT EXISTS wh_wh_idx_orders_host ON wh_orders(host_id)`,
+  `CREATE INDEX IF NOT EXISTS wh_wh_idx_orders_status ON wh_orders(status)`,
+  `CREATE INDEX IF NOT EXISTS wh_wh_idx_reviews_reviewee_created ON wh_reviews(reviewee_id, created_at)`,
+  `CREATE INDEX IF NOT EXISTS wh_wh_idx_notifications_user_read ON wh_notifications(user_id, read)`,
+  `CREATE INDEX IF NOT EXISTS wh_wh_idx_blacklist_status ON wh_blacklist(status)`,
+  `CREATE INDEX IF NOT EXISTS wh_wh_idx_blacklist_reporter ON wh_blacklist(reporter_id)`,
+  `CREATE INDEX IF NOT EXISTS wh_wh_idx_blacklist_target ON wh_blacklist(target_user_id)`,
+  `CREATE INDEX IF NOT EXISTS wh_wh_idx_blacklist_reporter_target_status ON wh_blacklist(reporter_id, target_user_id, status)`,
+  `CREATE INDEX IF NOT EXISTS wh_wh_idx_invite_codes_owner ON wh_invite_codes(owner_id)`,
+  `CREATE INDEX IF NOT EXISTS wh_wh_idx_invite_codes_used_by ON wh_invite_codes(used_by)`,
 ];
 
 // ============ 自动建表 ============
@@ -204,7 +204,7 @@ async function ensureDatabase(env) {
   try {
     // 检测 users 表是否存在（sqlite_master 查询，本地 D1 也支持）
     const result = await env.DB.prepare(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='users'"
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='wh_users'"
     ).first();
     if (result) {
       // 用户表已存在（可能是老 schema）→ 运行 blacklist 迁移
@@ -242,14 +242,14 @@ async function ensureDatabase(env) {
 //            status('pending'/'confirmed'/'dismissed'), created_at, handled_at, handled_by
 async function migrateBlacklistSchema(db) {
   try {
-    const cols = await db.prepare("PRAGMA table_info(blacklist)").all();
+    const cols = await db.prepare("PRAGMA table_info(wh_blacklist)").all();
     const names = (cols.results || []).map(r => r.name);
     const isOldSchema = names.includes("reported_id") || names.includes("evidence");
     if (!isOldSchema) return;
     console.log("[middleware] 检测到 blacklist 老 schema，迁移中…");
-    await db.prepare("DROP TABLE IF EXISTS blacklist").run();
+    await db.prepare("DROP TABLE IF EXISTS wh_blacklist").run();
     await db.prepare(
-      `CREATE TABLE blacklist (
+      `CREATE TABLE wh_blacklist (
         id TEXT PRIMARY KEY,
         reporter_id TEXT NOT NULL,
         target_user_id TEXT NOT NULL,
@@ -262,10 +262,10 @@ async function migrateBlacklistSchema(db) {
         handled_by TEXT
       )`
     ).run();
-    await db.prepare("CREATE INDEX IF NOT EXISTS idx_blacklist_status ON blacklist(status)").run();
-    await db.prepare("CREATE INDEX IF NOT EXISTS idx_blacklist_reporter ON blacklist(reporter_id)").run();
-    await db.prepare("CREATE INDEX IF NOT EXISTS idx_blacklist_target ON blacklist(target_user_id)").run();
-    await db.prepare("CREATE INDEX IF NOT EXISTS idx_blacklist_reporter_target_status ON blacklist(reporter_id, target_user_id, status)").run();
+    await db.prepare("CREATE INDEX IF NOT EXISTS wh_wh_idx_blacklist_status ON wh_blacklist(status)").run();
+    await db.prepare("CREATE INDEX IF NOT EXISTS wh_wh_idx_blacklist_reporter ON wh_blacklist(reporter_id)").run();
+    await db.prepare("CREATE INDEX IF NOT EXISTS wh_wh_idx_blacklist_target ON wh_blacklist(target_user_id)").run();
+    await db.prepare("CREATE INDEX IF NOT EXISTS wh_wh_idx_blacklist_reporter_target_status ON wh_blacklist(reporter_id, target_user_id, status)").run();
     console.log("[middleware] blacklist 表迁移完成");
   } catch (e) {
     console.error("[middleware] blacklist 迁移失败:", e);
@@ -278,7 +278,7 @@ async function seedAdmin(db) {
   const hash = await hashPassword("admin123", salt);
   const now = new Date().toISOString();
   await db.prepare(
-    `INSERT INTO users (id, phone, password_hash, password_salt, nickname, role, created_at, updated_at)
+    `INSERT INTO wh_users (id, phone, password_hash, password_salt, nickname, role, created_at, updated_at)
      VALUES (?, 'admin', ?, ?, '管理员', 'admin', ?, ?)`
   ).bind(crypto.randomUUID(), hash, salt, now, now).run();
   console.log("[middleware] 已播种 admin 账号 (admin / admin123)");
@@ -290,7 +290,7 @@ async function seedInviteCodes(db, count) {
   for (let i = 0; i < count; i++) {
     const code = generateInviteCode();
     await db.prepare(
-      "INSERT INTO invite_codes (code, owner_id, created_at) VALUES (?, ?, ?)"
+      "INSERT INTO wh_invite_codes (code, owner_id, created_at) VALUES (?, ?, ?)"
     ).bind(code, null, now).run();
   }
   console.log(`[middleware] 已播种 ${count} 个初始邀请码`);
@@ -304,8 +304,8 @@ async function resolveUser(request, env) {
   const token = auth.slice(7);
   const session = await env.DB.prepare(
     `SELECT s.token, s.user_id, s.expires_at, u.*
-     FROM sessions s
-     JOIN users u ON s.user_id = u.id
+     FROM wh_sessions s
+     JOIN wh_users u ON s.user_id = u.id
      WHERE s.token = ?`
   ).bind(token).first();
 
@@ -338,12 +338,12 @@ async function handleStats(request, env) {
   }
 
   const [hosts, pets, needs, orders, reviews, todayOrders] = await Promise.all([
-    count("SELECT COUNT(*) AS value FROM host_profiles WHERE is_verified = 1"),
-    count("SELECT COUNT(*) AS value FROM pets"),
-    count("SELECT COUNT(*) AS value FROM needs WHERE status = 'open' OR status = 'matched'"),
-    count("SELECT COUNT(*) AS value FROM orders WHERE status != 'cancelled'"),
-    count("SELECT COUNT(*) AS value FROM reviews"),
-    count("SELECT COUNT(*) AS value FROM orders WHERE date(created_at) = date('now','localtime')"),
+    count("SELECT COUNT(*) AS value FROM wh_host_profiles WHERE is_verified = 1"),
+    count("SELECT COUNT(*) AS value FROM wh_pets"),
+    count("SELECT COUNT(*) AS value FROM wh_needs WHERE status = 'open' OR status = 'matched'"),
+    count("SELECT COUNT(*) AS value FROM wh_orders WHERE status != 'cancelled'"),
+    count("SELECT COUNT(*) AS value FROM wh_reviews"),
+    count("SELECT COUNT(*) AS value FROM wh_orders WHERE date(created_at) = date('now','localtime')"),
   ]);
 
   return new Response(JSON.stringify({

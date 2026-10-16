@@ -41,7 +41,7 @@ export async function onRequestGet({ request, env }) {
 
   // 自己的 profile
   const myProfile = await env.DB.prepare(
-    "SELECT id, is_sponsored, sponsored_by, updated_at FROM host_profiles WHERE user_id = ?"
+    "SELECT id, is_sponsored, sponsored_by, updated_at FROM wh_host_profiles WHERE user_id = ?"
   ).bind(user.id).first();
 
   const sponsored = !!(myProfile && myProfile.is_sponsored);
@@ -50,7 +50,7 @@ export async function onRequestGet({ request, env }) {
   let sponsoredBy = null;
   if (myProfile && myProfile.is_sponsored && myProfile.sponsored_by) {
     const sp = await env.DB.prepare(
-      "SELECT id, nickname FROM users WHERE id = ?"
+      "SELECT id, nickname FROM wh_users WHERE id = ?"
     ).bind(myProfile.sponsored_by).first();
     sponsoredBy = {
       sponsorId: myProfile.sponsored_by,
@@ -68,10 +68,10 @@ export async function onRequestGet({ request, env }) {
       `SELECT s.id AS sponsor_row_id, s.created_at AS created_at,
               u.id, u.nickname, u.avatar_key,
               hp.avg_rating,
-              (SELECT COUNT(*) FROM orders o WHERE o.host_id = u.id AND o.status = 'completed') AS completed_orders
-         FROM sponsors s
-         JOIN users u ON u.id = s.sponsor_id
-         LEFT JOIN host_profiles hp ON hp.user_id = u.id
+              (SELECT COUNT(*) FROM wh_orders o WHERE o.host_id = u.id AND o.status = 'completed') AS completed_orders
+         FROM wh_sponsors s
+         JOIN wh_users u ON u.id = s.sponsor_id
+         LEFT JOIN wh_host_profiles hp ON hp.user_id = u.id
          WHERE s.sponsored_host_id = ?
          ORDER BY s.created_at DESC`
     ).bind(myProfile.id).all();
@@ -91,9 +91,9 @@ export async function onRequestGet({ request, env }) {
     `SELECT s.id AS sponsor_row_id, s.sponsored_host_id, s.created_at AS created_at,
             hp.user_id AS target_user_id, hp.is_sponsored AS target_is_sponsored, hp.sponsored_by AS target_sponsored_by,
             u.id, u.nickname
-       FROM sponsors s
-       JOIN host_profiles hp ON hp.id = s.sponsored_host_id
-       JOIN users u ON u.id = hp.user_id
+       FROM wh_sponsors s
+       JOIN wh_host_profiles hp ON hp.id = s.sponsored_host_id
+       JOIN wh_users u ON u.id = hp.user_id
        WHERE s.sponsor_id = ?
        ORDER BY s.created_at DESC`
   ).bind(user.id).all();

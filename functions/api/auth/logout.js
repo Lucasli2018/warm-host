@@ -16,7 +16,7 @@ export async function onRequestPost({ request, env }) {
   // 若没有 token，也允许调用（前端只是清本地状态）
   if (token) {
     await env.DB.prepare(
-      "DELETE FROM sessions WHERE token = ?"
+      "DELETE FROM wh_sessions WHERE token = ?"
     ).bind(token).run();
   }
 

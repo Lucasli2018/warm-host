@@ -41,15 +41,15 @@ export async function onRequestGet({ env, params }) {
             h.address_fuzzy, h.district, h.experience, h.special_services,
             h.daily_rate_cents, h.is_verified, h.is_sponsored,
             h.avg_rating, h.total_reviews
-     FROM host_profiles h
-     JOIN users u ON h.user_id = u.id
+     FROM wh_host_profiles h
+     JOIN wh_users u ON h.user_id = u.id
      WHERE h.id = ?`
   ).bind(id).first();
 
   if (!row) return fail("寄养人不存在", 404);
   // 查是否 banned / 非 active
   const uRow = await env.DB.prepare(
-    "SELECT banned, host_status FROM users WHERE id = ?"
+    "SELECT banned, host_status FROM wh_users WHERE id = ?"
   ).bind(row.user_id).first();
   if (!uRow || uRow.banned === 1 || uRow.host_status !== "active") {
     return fail("寄养人不存在", 404);
@@ -57,7 +57,7 @@ export async function onRequestGet({ env, params }) {
 
   // 可接单区间：active=1 且 start_date >= today（升序）
   const { results } = await env.DB.prepare(
-    `SELECT start_date, end_date, note FROM host_availability
+    `SELECT start_date, end_date, note FROM wh_host_availability
      WHERE host_id = ? AND active = 1 AND start_date >= ?
      ORDER BY start_date ASC`
   ).bind(row.host_id, todayStr).all();

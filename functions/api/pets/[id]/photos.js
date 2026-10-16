@@ -54,7 +54,7 @@ function serialize(row) {
 
 // 加载宠物并校验 owner 权限
 async function loadOwnedPet(db, petId, userId) {
-  const row = await db.prepare("SELECT * FROM pets WHERE id = ?").bind(petId).first();
+  const row = await db.prepare("SELECT * FROM wh_pets WHERE id = ?").bind(petId).first();
   if (!row) return { error: "宠物不存在", status: 404 };
   if (row.owner_id !== userId) return { error: "无权操作此宠物", status: 403 };
   return { row };
@@ -117,10 +117,10 @@ export async function onRequestPost({ request, env, params }) {
   const ts = now();
 
   await env.DB.prepare(
-    "UPDATE pets SET photos = ?, cover_key = ?, updated_at = ? WHERE id = ?"
+    "UPDATE wh_pets SET photos = ?, cover_key = ?, updated_at = ? WHERE id = ?"
   ).bind(JSON.stringify(newPhotos), coverKey, ts, petId).run();
 
-  const updated = await env.DB.prepare("SELECT * FROM pets WHERE id = ?").bind(petId).first();
+  const updated = await env.DB.prepare("SELECT * FROM wh_pets WHERE id = ?").bind(petId).first();
   return json(serialize(updated));
 }
 
@@ -149,10 +149,10 @@ export async function onRequestPut({ request, env, params }) {
 
   const ts = now();
   await env.DB.prepare(
-    "UPDATE pets SET cover_key = ?, updated_at = ? WHERE id = ?"
+    "UPDATE wh_pets SET cover_key = ?, updated_at = ? WHERE id = ?"
   ).bind(coverKey, ts, petId).run();
 
-  const updated = await env.DB.prepare("SELECT * FROM pets WHERE id = ?").bind(petId).first();
+  const updated = await env.DB.prepare("SELECT * FROM wh_pets WHERE id = ?").bind(petId).first();
   return json(serialize(updated));
 }
 
@@ -195,9 +195,9 @@ export async function onRequestDelete({ request, env, params }) {
 
   const ts = now();
   await env.DB.prepare(
-    "UPDATE pets SET photos = ?, cover_key = ?, updated_at = ? WHERE id = ?"
+    "UPDATE wh_pets SET photos = ?, cover_key = ?, updated_at = ? WHERE id = ?"
   ).bind(JSON.stringify(newPhotos), newCover, ts, petId).run();
 
-  const updated = await env.DB.prepare("SELECT * FROM pets WHERE id = ?").bind(petId).first();
+  const updated = await env.DB.prepare("SELECT * FROM wh_pets WHERE id = ?").bind(petId).first();
   return json(serialize(updated));
 }

@@ -46,12 +46,12 @@ export async function onRequestPost({ request, env, params }) {
 
   // 目标用户 + 档案必须存在
   const target = await env.DB.prepare(
-    "SELECT id, nickname, host_status FROM users WHERE id = ?"
+    "SELECT id, nickname, host_status FROM wh_users WHERE id = ?"
   ).bind(targetId).first();
   if (!target) return fail("目标用户不存在", 404);
 
   const profile = await env.DB.prepare(
-    "SELECT id, user_id FROM host_profiles WHERE user_id = ?"
+    "SELECT id, user_id FROM wh_host_profiles WHERE user_id = ?"
   ).bind(targetId).first();
   if (!profile) return fail("目标用户无寄养人档案", 404);
 
@@ -64,13 +64,13 @@ export async function onRequestPost({ request, env, params }) {
 
   // 更新 users.host_status
   await env.DB.prepare(
-    "UPDATE users SET host_status = ?, updated_at = ? WHERE id = ?"
+    "UPDATE wh_users SET host_status = ?, updated_at = ? WHERE id = ?"
   ).bind(cfg.status, ts, targetId).run();
 
   // verify / activate：标记 is_verified=1
   if (cfg.setVerified) {
     await env.DB.prepare(
-      "UPDATE host_profiles SET is_verified = 1, updated_at = ? WHERE user_id = ?"
+      "UPDATE wh_host_profiles SET is_verified = 1, updated_at = ? WHERE user_id = ?"
     ).bind(ts, targetId).run();
   }
 

@@ -2,7 +2,7 @@
 //
 // 用法：
 //   node scripts/gen-seed-sql.mjs > seed.sql
-//   node D:/npm-global/node_modules/wrangler/bin/wrangler.js d1 execute warm-host-db \
+//   node D:/npm-global/node_modules/wrangler/bin/wrangler.js d1 execute dev \
 //        --local --persist-to ./.wrangler-dev --file=seed.sql
 //
 // 幂等：INSERT OR IGNORE + 固定唯一键（users.phone 唯一、invite_codes.code 主键）。
@@ -18,7 +18,7 @@ const hash = await hashPassword("admin123", salt);
 const adminId = crypto.randomUUID();
 
 const lines = [
-  `INSERT OR IGNORE INTO users (id, phone, password_hash, password_salt, nickname, role, created_at, updated_at)
+  `INSERT OR IGNORE INTO wh_users (id, phone, password_hash, password_salt, nickname, role, created_at, updated_at)
    VALUES ('${adminId}', 'admin', '${hash}', '${salt}', '管理员', 'admin', '${ts}', '${ts}');`,
 ];
 
@@ -26,7 +26,7 @@ const codes = [];
 for (let i = 0; i < COUNT; i++) {
   const code = generateInviteCode();
   codes.push(code);
-  lines.push(`INSERT OR IGNORE INTO invite_codes (code, owner_id, created_at) VALUES ('${code}', NULL, '${ts}');`);
+  lines.push(`INSERT OR IGNORE INTO wh_invite_codes (code, owner_id, created_at) VALUES ('${code}', NULL, '${ts}');`);
 }
 
 process.stdout.write(lines.join("\n") + "\n");

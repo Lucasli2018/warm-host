@@ -74,11 +74,11 @@ export async function onRequestPost({ request, env }) {
   const ts = now();
   if (realName) {
     await env.DB.prepare(
-      "UPDATE users SET id_card_key = ?, id_card_verified = 0, real_name = ?, updated_at = ? WHERE id = ?"
+      "UPDATE wh_users SET id_card_key = ?, id_card_verified = 0, real_name = ?, updated_at = ? WHERE id = ?"
     ).bind(key, realName, ts, user.id).run();
   } else {
     await env.DB.prepare(
-      "UPDATE users SET id_card_key = ?, id_card_verified = 0, updated_at = ? WHERE id = ?"
+      "UPDATE wh_users SET id_card_key = ?, id_card_verified = 0, updated_at = ? WHERE id = ?"
     ).bind(key, ts, user.id).run();
   }
 

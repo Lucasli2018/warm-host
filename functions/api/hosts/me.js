@@ -118,14 +118,14 @@ export async function onRequestGet({ request, env }) {
 
   // user 信息（含 host_status, is_sponsored, is_verified 需从 host_profiles 拿）
   const profile = await env.DB.prepare(
-    "SELECT * FROM host_profiles WHERE user_id = ?"
+    "SELECT * FROM wh_host_profiles WHERE user_id = ?"
   ).bind(user.id).first();
 
   // 查询 availability 列表
   let availability = [];
   if (profile) {
     const { results } = await env.DB.prepare(
-      "SELECT * FROM host_availability WHERE host_id = ? AND active = 1 ORDER BY start_date ASC"
+      "SELECT * FROM wh_host_availability WHERE host_id = ? AND active = 1 ORDER BY start_date ASC"
     ).bind(profile.id).all();
     availability = (results || []).map(serializeAvailability);
   }
@@ -148,7 +148,7 @@ export async function onRequestPost({ request, env }) {
   if (!user.isHost) return fail("您尚未申请成为寄养人", 403);
 
   const profile = await env.DB.prepare(
-    "SELECT id FROM host_profiles WHERE user_id = ?"
+    "SELECT id FROM wh_host_profiles WHERE user_id = ?"
   ).bind(user.id).first();
   if (!profile) return fail("寄养人档案不存在", 404);
 
@@ -161,7 +161,7 @@ export async function onRequestPost({ request, env }) {
   const ts = now();
 
   await env.DB.prepare(
-    `UPDATE host_profiles SET
+    `UPDATE wh_host_profiles SET
        bio = ?, capacity_count = ?, capacity_species = ?, capacity_size = ?,
        capacity_gender = ?, address_fuzzy = ?, district = ?, experience = ?,
        special_services = ?, daily_rate_cents = ?, updated_at = ?

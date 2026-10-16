@@ -23,7 +23,7 @@ export async function onRequestPost({ request, env }) {
 
   // 查邀请记录
   const row = await env.DB.prepare(
-    "SELECT id, sponsor_id, sponsored_host_id, created_at FROM sponsors WHERE id = ?"
+    "SELECT id, sponsor_id, sponsored_host_id, created_at FROM wh_sponsors WHERE id = ?"
   ).bind(sponsorId).first();
   if (!row) return fail("邀请记录不存在", 404);
 
@@ -34,7 +34,7 @@ export async function onRequestPost({ request, env }) {
 
   // 查目标 profile（sponsored_host_id）
   const targetProfile = await env.DB.prepare(
-    "SELECT id, user_id, is_sponsored, sponsored_by FROM host_profiles WHERE id = ?"
+    "SELECT id, user_id, is_sponsored, sponsored_by FROM wh_host_profiles WHERE id = ?"
   ).bind(row.sponsored_host_id).first();
   if (!targetProfile) {
     return fail("被担保的寄养人不存在", 404);
@@ -47,7 +47,7 @@ export async function onRequestPost({ request, env }) {
 
   // 目标寄养人身份有效性
   const targetUser = await env.DB.prepare(
-    "SELECT id, nickname, host_status, banned FROM users WHERE id = ?"
+    "SELECT id, nickname, host_status, banned FROM wh_users WHERE id = ?"
   ).bind(targetProfile.user_id).first();
   if (!targetUser) {
     return fail("被担保的寄养人不存在", 404);
@@ -59,7 +59,7 @@ export async function onRequestPost({ request, env }) {
   const ts = now();
 
   await env.DB.prepare(
-    "UPDATE host_profiles SET is_sponsored = 1, sponsored_by = ?, updated_at = ? WHERE id = ?"
+    "UPDATE wh_host_profiles SET is_sponsored = 1, sponsored_by = ?, updated_at = ? WHERE id = ?"
   ).bind(user.id, ts, targetProfile.id).run();
 
   // 通知被担保者

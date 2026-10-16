@@ -44,7 +44,7 @@ export async function onRequestGet({ request, env }) {
   const whoCol = role === "host" ? "o.host_id" : "o.owner_id";
 
   const totalRow = await env.DB.prepare(
-    `SELECT COUNT(*) AS c FROM orders o WHERE ${whoCol} = ?`
+    `SELECT COUNT(*) AS c FROM wh_orders o WHERE ${whoCol} = ?`
   ).bind(user.id).first();
 
   const rows = await env.DB.prepare(
@@ -57,12 +57,12 @@ export async function onRequestGet({ request, env }) {
             h.district AS host_district, h.address_fuzzy AS host_address_fuzzy,
             h.daily_rate_cents AS host_daily_rate_cents,
             r.id AS review_id
-     FROM orders o
-     LEFT JOIN pets p ON o.pet_id = p.id
-     LEFT JOIN users uh ON o.host_id = uh.id
-     LEFT JOIN users uo ON o.owner_id = uo.id
-     LEFT JOIN host_profiles h ON h.user_id = o.host_id
-     LEFT JOIN reviews r ON r.order_id = o.id
+     FROM wh_orders o
+     LEFT JOIN wh_pets p ON o.pet_id = p.id
+     LEFT JOIN wh_users uh ON o.host_id = uh.id
+     LEFT JOIN wh_users uo ON o.owner_id = uo.id
+     LEFT JOIN wh_host_profiles h ON h.user_id = o.host_id
+     LEFT JOIN wh_reviews r ON r.order_id = o.id
      WHERE ${whoCol} = ?
      ORDER BY o.created_at DESC
      LIMIT ? OFFSET ?`

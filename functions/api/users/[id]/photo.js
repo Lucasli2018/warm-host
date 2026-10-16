@@ -13,7 +13,7 @@ export async function onRequestGet({ env, params }) {
 
   // banned=0 一致性：与 [id].js 公开信息接口保持相同可见性策略
   const row = await env.DB.prepare(
-    "SELECT avatar_key FROM users WHERE id = ? AND banned = 0"
+    "SELECT avatar_key FROM wh_users WHERE id = ? AND banned = 0"
   ).bind(id).first();
 
   if (!row || !row.avatar_key) {

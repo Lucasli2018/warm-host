@@ -14,7 +14,7 @@ export async function createNotification(env, { userId, type, title, body, link 
   const id = crypto.randomUUID();
   try {
     await env.DB.prepare(
-      "INSERT INTO notifications (id, user_id, type, title, body, link, read, created_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?)"
+      "INSERT INTO wh_notifications (id, user_id, type, title, body, link, read, created_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?)"
     ).bind(id, userId, type, title || "", body || "", link || "", ts).run();
     return id;
   } catch (err) {

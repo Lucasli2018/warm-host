@@ -66,8 +66,8 @@ export async function requireUser(request, env) {
   const token = auth.slice(7);
   const session = await env.DB.prepare(
     `SELECT s.token, s.user_id, s.expires_at, u.*
-     FROM sessions s
-     JOIN users u ON s.user_id = u.id
+     FROM wh_sessions s
+     JOIN wh_users u ON s.user_id = u.id
      WHERE s.token = ?`
   ).bind(token).first();
 

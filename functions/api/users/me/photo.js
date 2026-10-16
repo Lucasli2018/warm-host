@@ -65,7 +65,7 @@ export async function onRequestPost({ request, env }) {
   }
 
   await env.DB.prepare(
-    "UPDATE users SET avatar_key = ?, updated_at = ? WHERE id = ?"
+    "UPDATE wh_users SET avatar_key = ?, updated_at = ? WHERE id = ?"
   ).bind(key, now(), user.id).run();
 
   return json({ success: true, key });

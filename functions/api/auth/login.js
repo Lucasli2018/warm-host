@@ -73,7 +73,7 @@ export async function onRequestPost({ request, env }) {
 
   // 查用户
   const user = await env.DB.prepare(
-    "SELECT * FROM users WHERE phone = ?"
+    "SELECT * FROM wh_users WHERE phone = ?"
   ).bind(phone).first();
 
   if (!user || !(await verifyPassword(password, user.password_salt, user.password_hash))) {
@@ -94,12 +94,12 @@ export async function onRequestPost({ request, env }) {
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
   await env.DB.prepare(
-    "INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)"
+    "INSERT INTO wh_sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)"
   ).bind(token, user.id, ts, expiresAt).run();
 
   // 顺手清理过期 session
   await env.DB.prepare(
-    "DELETE FROM sessions WHERE expires_at < ?"
+    "DELETE FROM wh_sessions WHERE expires_at < ?"
   ).bind(ts).run();
 
   return json({

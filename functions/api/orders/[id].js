@@ -17,21 +17,21 @@ export async function onRequestGet({ request, env, params }) {
   const user = await requireUser(request, env);
   if (!user) return fail("未登录", 401);
 
-  const order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?").bind(params.id).first();
+  const order = await env.DB.prepare("SELECT * FROM wh_orders WHERE id = ?").bind(params.id).first();
   if (!order) return fail("订单不存在", 404);
 
   const isOwner = order.owner_id === user.id;
   const isHost = order.host_id === user.id;
   if (!isOwner && !isHost) return fail("无权查看该订单", 403);
 
-  const pet = await env.DB.prepare("SELECT * FROM pets WHERE id = ?").bind(order.pet_id).first();
-  const hostUser = await env.DB.prepare("SELECT id, nickname, avatar_key, bio, city, emergency_contact FROM users WHERE id = ?").bind(order.host_id).first();
-  const ownerUser = await env.DB.prepare("SELECT id, nickname, avatar_key, bio, city, emergency_contact FROM users WHERE id = ?").bind(order.owner_id).first();
+  const pet = await env.DB.prepare("SELECT * FROM wh_pets WHERE id = ?").bind(order.pet_id).first();
+  const hostUser = await env.DB.prepare("SELECT id, nickname, avatar_key, bio, city, emergency_contact FROM wh_users WHERE id = ?").bind(order.host_id).first();
+  const ownerUser = await env.DB.prepare("SELECT id, nickname, avatar_key, bio, city, emergency_contact FROM wh_users WHERE id = ?").bind(order.owner_id).first();
   const hostProfile = await env.DB.prepare(
-    "SELECT district, address_fuzzy, daily_rate_cents, capacity_count, capacity_species, capacity_size, is_verified, is_sponsored, avg_rating, total_reviews FROM host_profiles WHERE user_id = ?"
+    "SELECT district, address_fuzzy, daily_rate_cents, capacity_count, capacity_species, capacity_size, is_verified, is_sponsored, avg_rating, total_reviews FROM wh_host_profiles WHERE user_id = ?"
   ).bind(order.host_id).first();
 
-  const review = await env.DB.prepare("SELECT * FROM reviews WHERE order_id = ?").bind(order.id).first();
+  const review = await env.DB.prepare("SELECT * FROM wh_reviews WHERE order_id = ?").bind(order.id).first();
 
   return json({
     order: {

@@ -1,5 +1,5 @@
 // GET /api/needs/my
-// 当前用户全部 needs（所有状态），JOIN pets + owner nickname
+// 当前用户全部 needs（所有状态），JOIN wh_pets + owner nickname
 // 额外返回 hostId（若已 matched/filled，从 orders 表查关联的 host_id）
 
 import { json, fail, now, requireUser } from "../../_shared/helpers.js";
@@ -45,7 +45,7 @@ export async function onRequestGet({ request, env }) {
     return d.toISOString();
   })();
   await env.DB.prepare(
-    "UPDATE needs SET status = 'expired', updated_at = ? WHERE owner_id = ? AND status = 'open' AND created_at < ?"
+    "UPDATE wh_needs SET status = 'expired', updated_at = ? WHERE owner_id = ? AND status = 'open' AND created_at < ?"
   ).bind(now(), user.id, cutoff).run();
 
   const { results } = await env.DB.prepare(
@@ -54,10 +54,10 @@ export async function onRequestGet({ request, env }) {
             p.gender AS pet_gender, p.age AS pet_age, p.cover_key AS pet_cover_key,
             u.nickname AS owner_nickname,
             o.host_id AS host_id
-     FROM needs n
-     LEFT JOIN pets p ON n.pet_id = p.id
-     LEFT JOIN users u ON n.owner_id = u.id
-     LEFT JOIN orders o ON o.need_id = n.id
+     FROM wh_needs n
+     LEFT JOIN wh_pets p ON n.pet_id = p.id
+     LEFT JOIN wh_users u ON n.owner_id = u.id
+     LEFT JOIN wh_orders o ON o.need_id = n.id
      WHERE n.owner_id = ?
      ORDER BY n.created_at DESC`
   ).bind(user.id).all();

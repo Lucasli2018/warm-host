@@ -45,8 +45,8 @@ export async function onRequestGet({ request, env }) {
             h.daily_rate_cents, h.is_verified, h.is_sponsored,
             h.avg_rating, h.total_reviews,
             h.created_at AS applied_at, h.updated_at AS profile_updated_at
-      FROM users u
-      JOIN host_profiles h ON h.user_id = u.id
+      FROM wh_users u
+      JOIN wh_host_profiles h ON h.user_id = u.id
       WHERE u.host_status = ?
       ORDER BY h.created_at DESC`
   ).bind(status).all();

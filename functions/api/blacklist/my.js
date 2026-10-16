@@ -54,8 +54,8 @@ export async function onRequestGet({ request, env }) {
     `SELECT b.id, b.category, b.details, b.status, b.created_at, b.handled_at,
             b.target_user_id, b.target_type,
             u.nickname AS target_nickname, u.phone AS target_phone
-     FROM blacklist b
-     JOIN users u ON b.target_user_id = u.id
+     FROM wh_blacklist b
+     JOIN wh_users u ON b.target_user_id = u.id
      WHERE b.reporter_id = ?
      ORDER BY b.created_at DESC`
   ).bind(user.id).all();
@@ -65,8 +65,8 @@ export async function onRequestGet({ request, env }) {
     `SELECT b.id, b.category, b.details, b.status, b.created_at, b.handled_at,
             b.reporter_id, b.target_type,
             u.nickname AS reporter_nickname, u.phone AS reporter_phone
-     FROM blacklist b
-     JOIN users u ON b.reporter_id = u.id
+     FROM wh_blacklist b
+     JOIN wh_users u ON b.reporter_id = u.id
      WHERE b.target_user_id = ?
      ORDER BY b.created_at DESC`
   ).bind(user.id).all();

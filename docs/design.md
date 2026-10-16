@@ -655,7 +655,7 @@ active → suspended (被 Ban 或严重违规)
 3. 修改 `wrangler.toml` 的 `database_id` 和 `bucket_name`
 4. 本地：`wrangler pages dev --port 8787 --persist-to ./.wrangler-dev`
 5. `_middleware.js` 首次访问自动建表 + seed（admin 账号 + 演示寄养人 + 演示宠物）
-6. 生产：`wrangler d1 execute warm-host-db --remote --file=schema.sql`
+6. 生产：`wrangler d1 execute dev --remote --file=schema.sql`（共享 dev 库，表名统一 wh_ 前缀）
 7. 部署：`wrangler pages deploy . --project-name=warm-host`
 
 **已知坑**（README 会写）：

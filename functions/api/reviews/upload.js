@@ -58,7 +58,7 @@ export async function onRequestPost({ request, env }) {
   let orderKey = null;
 
   if (orderId) {
-    const order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?").bind(orderId).first();
+    const order = await env.DB.prepare("SELECT * FROM wh_orders WHERE id = ?").bind(orderId).first();
     if (!order) return fail("订单不存在", 404);
     const isOwner = order.owner_id === user.id;
     const isHost = order.host_id === user.id;

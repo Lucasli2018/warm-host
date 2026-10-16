@@ -29,12 +29,12 @@ export async function GET(request, env) {
   if (!db) return fail("database unavailable", 500);
 
   const [hosts, pets, needs, orders, reviews, todayOrders] = await Promise.all([
-    count(db, `SELECT COUNT(*) AS value FROM host_profiles WHERE is_verified = 1`),
-    count(db, `SELECT COUNT(*) AS value FROM pets`),
-    count(db, `SELECT COUNT(*) AS value FROM needs WHERE status = 'open' OR status = 'matched'`),
-    count(db, `SELECT COUNT(*) AS value FROM orders WHERE status != 'cancelled'`),
-    count(db, `SELECT COUNT(*) AS value FROM reviews`),
-    count(db, `SELECT COUNT(*) AS value FROM orders WHERE date(created_at) = date('now','localtime')`),
+    count(db, `SELECT COUNT(*) AS value FROM wh_host_profiles WHERE is_verified = 1`),
+    count(db, `SELECT COUNT(*) AS value FROM wh_pets`),
+    count(db, `SELECT COUNT(*) AS value FROM wh_needs WHERE status = 'open' OR status = 'matched'`),
+    count(db, `SELECT COUNT(*) AS value FROM wh_orders WHERE status != 'cancelled'`),
+    count(db, `SELECT COUNT(*) AS value FROM wh_reviews`),
+    count(db, `SELECT COUNT(*) AS value FROM wh_orders WHERE date(created_at) = date('now','localtime')`),
   ]);
 
   return json({

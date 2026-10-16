@@ -51,7 +51,7 @@ export async function onRequestPut({ request, env }) {
 
   // 仅 active 状态可设置可接单日期
   const userRow = await env.DB.prepare(
-    "SELECT host_status FROM users WHERE id = ?"
+    "SELECT host_status FROM wh_users WHERE id = ?"
   ).bind(user.id).first();
   if (!userRow || userRow.host_status !== "active") {
     return fail("审核通过后可设置接单日期", 403);
@@ -59,7 +59,7 @@ export async function onRequestPut({ request, env }) {
 
   // 查 host_profiles（拿 host_id）
   const profile = await env.DB.prepare(
-    "SELECT id FROM host_profiles WHERE user_id = ?"
+    "SELECT id FROM wh_host_profiles WHERE user_id = ?"
   ).bind(user.id).first();
   if (!profile) return fail("寄养人档案不存在", 404);
 
@@ -100,12 +100,12 @@ export async function onRequestPut({ request, env }) {
   // 全删全建
   try {
     await env.DB.prepare(
-      "DELETE FROM host_availability WHERE host_id = ?"
+      "DELETE FROM wh_host_availability WHERE host_id = ?"
     ).bind(profile.id).run();
 
     for (const item of validItems) {
       await env.DB.prepare(
-        `INSERT INTO host_availability (
+        `INSERT INTO wh_host_availability (
            id, host_id, start_date, end_date, note, active, created_at
          ) VALUES (?, ?, ?, ?, ?, 1, ?)`
       ).bind(

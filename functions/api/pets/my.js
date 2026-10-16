@@ -44,7 +44,7 @@ export async function onRequestGet({ request, env }) {
   if (!user) return fail("未登录或会话已过期", 401);
 
   const { results } = await env.DB.prepare(
-    "SELECT * FROM pets WHERE owner_id = ? ORDER BY created_at DESC"
+    "SELECT * FROM wh_pets WHERE owner_id = ? ORDER BY created_at DESC"
   ).bind(user.id).all();
 
   return json((results || []).map(serialize));

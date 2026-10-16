@@ -40,7 +40,7 @@ export async function onRequestPost({ request, env, params }) {
 
   // 查 host profile
   const hostRow = await env.DB.prepare(
-    "SELECT id, user_id FROM host_profiles WHERE id = ?"
+    "SELECT id, user_id FROM wh_host_profiles WHERE id = ?"
   ).bind(hostId).first();
   if (!hostRow) return fail("寄养人不存在", 404);
   const hostUserId = hostRow.user_id;
@@ -50,7 +50,7 @@ export async function onRequestPost({ request, env, params }) {
 
   // 查需求
   const need = await env.DB.prepare(
-    "SELECT id, owner_id, status, pet_id, start_date, end_date FROM needs WHERE id = ?"
+    "SELECT id, owner_id, status, pet_id, start_date, end_date FROM wh_needs WHERE id = ?"
   ).bind(needId).first();
   if (!need) return fail("需求不存在", 404);
 
@@ -64,14 +64,14 @@ export async function onRequestPost({ request, env, params }) {
 
   // 已有订单 → 400（排除 cancelled）
   const existing = await env.DB.prepare(
-    "SELECT id FROM orders WHERE need_id = ? AND status NOT IN ('cancelled')"
+    "SELECT id FROM wh_orders WHERE need_id = ? AND status NOT IN ('cancelled')"
   ).bind(needId).first();
   if (existing) return fail("该需求已有订单，无法邀请", 400);
 
   // 防骚扰：同一主人对同一寄养人的同一需求，24 小时内只能邀请一次
   const cutoff = isoHoursAgo(24);
   const dupInvite = await env.DB.prepare(
-    "SELECT id FROM notifications " +
+    "SELECT id FROM wh_notifications " +
     "WHERE user_id = ? AND type = 'order_invite' AND link LIKE ? AND created_at > ?"
   ).bind(hostUserId, "%need=" + needId, cutoff).first();
   if (dupInvite) return fail("24 小时内已邀请过，请耐心等待", 429);
@@ -79,7 +79,7 @@ export async function onRequestPost({ request, env, params }) {
   // 组装通知 body：查宠物名
   let petName = "宠物";
   try {
-    const petRow = await env.DB.prepare("SELECT name FROM pets WHERE id = ?")
+    const petRow = await env.DB.prepare("SELECT name FROM wh_pets WHERE id = ?")
       .bind(need.pet_id).first();
     if (petRow && petRow.name) petName = petRow.name;
   } catch { /* ignore */ }

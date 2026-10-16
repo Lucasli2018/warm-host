@@ -36,12 +36,12 @@ export async function onRequestGet({ request, env, params }) {
 
   // 查 host_profiles → 拿 user_id + 校验 active/非 ban
   const profile = await env.DB.prepare(
-    "SELECT id, user_id FROM host_profiles WHERE id = ?"
+    "SELECT id, user_id FROM wh_host_profiles WHERE id = ?"
   ).bind(id).first();
   if (!profile) return fail("寄养人不存在", 404);
 
   const uRow = await env.DB.prepare(
-    "SELECT banned, host_status FROM users WHERE id = ?"
+    "SELECT banned, host_status FROM wh_users WHERE id = ?"
   ).bind(profile.user_id).first();
   if (!uRow || uRow.banned === 1 || uRow.host_status !== "active") {
     return fail("寄养人不存在", 404);
@@ -55,14 +55,14 @@ export async function onRequestGet({ request, env, params }) {
   // 总数 + 平均评分
   const aggRow = await env.DB.prepare(
     `SELECT COUNT(*) AS cnt, ROUND(AVG(rating), 2) AS avg_rating
-     FROM reviews WHERE reviewee_id = ?`
+     FROM wh_reviews WHERE reviewee_id = ?`
   ).bind(profile.user_id).first();
   const total = Number(aggRow?.cnt || 0);
   const avgRating = Number(aggRow?.avg_rating || 0);
 
   // 评分分布
   const distRows = await env.DB.prepare(
-    `SELECT rating, COUNT(*) AS cnt FROM reviews
+    `SELECT rating, COUNT(*) AS cnt FROM wh_reviews
      WHERE reviewee_id = ?
      GROUP BY rating`
   ).bind(profile.user_id).all();
@@ -79,8 +79,8 @@ export async function onRequestGet({ request, env, params }) {
   const { results } = await env.DB.prepare(
     `SELECT r.id, r.rating, r.content, r.tags, r.photos, r.created_at,
             u.id AS reviewer_id, u.nickname AS reviewer_nickname, u.avatar_key AS reviewer_avatar
-     FROM reviews r
-     JOIN users u ON r.reviewer_id = u.id
+     FROM wh_reviews r
+     JOIN wh_users u ON r.reviewer_id = u.id
      WHERE r.reviewee_id = ?
      ORDER BY r.created_at DESC
      LIMIT ? OFFSET ?`
